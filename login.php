@@ -253,7 +253,7 @@
         // Event saat tombol sign up ditekan
         document.querySelector('.signup-button').addEventListener('click', function() {
             // Redirect ke halaman sign up
-            window.location.href = 'SignUp.html';
+            window.location.href = 'signup.html';
         });
     </script>
 </body>
