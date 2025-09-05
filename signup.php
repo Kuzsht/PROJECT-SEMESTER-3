@@ -234,7 +234,7 @@
             e.preventDefault();
             alert('Sign up berhasil!');
             // Redirect ke halaman login setelah signup
-            window.location.href = 'HalamanLogin.html';
+            window.location.href = 'login.php';
         });
     </script>
 </body>
