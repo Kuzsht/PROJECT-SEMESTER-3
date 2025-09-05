@@ -195,7 +195,7 @@
                 Jika anda sudah memiliki akun,<br>
                 silakan masuk melalui halaman login
             </p>
-            <button class="signin-button" onclick="window.location.href='HalamanLogin.html'">SIGN IN</button>
+            <button class="signin-button" onclick="window.location.href='login.php'">SIGN IN</button>
         </div>
 
         <!-- Right Side - Sign Up Form -->
