@@ -247,13 +247,13 @@
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
             // Redirect ke halaman landing
-            window.location.href = 'index.html';
+            window.location.href = 'index.php';
         });
 
         // Event saat tombol sign up ditekan
         document.querySelector('.signup-button').addEventListener('click', function() {
             // Redirect ke halaman sign up
-            window.location.href = 'signup.html';
+            window.location.href = 'signup.php';
         });
     </script>
 </body>
