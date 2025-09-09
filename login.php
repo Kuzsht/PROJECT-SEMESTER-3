@@ -167,7 +167,12 @@
             color: rgb(75, 171, 255);
         }
 
-        @media (max-width: 768px) {.container {flex-direction: column;} .signin-section,.welcome-section {flex: none; height: auto; min-height: 50vh;} .signin-title {font-size: 36px;} .welcome-title {font-size: 48px;}}
+        @media (max-width: 768px) {
+            .container {flex-direction: column;} 
+            .signin-section,.welcome-section {flex: none; height: auto; min-height: 50vh;} 
+            .signin-title {font-size: 36px;} 
+            .welcome-title {font-size: 48px;}
+        }
     </style>
 </head>
 <body>

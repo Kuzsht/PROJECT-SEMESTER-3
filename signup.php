@@ -10,24 +10,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <style>
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
             font-family: "Space Grotesk", sans-serif;
         }
 
         body {
-            height: 100vh;
+            min-height: 100vh; 
             display: flex;
         }
 
         .container {
-            display: flex;
-            width: 100%;
-            height: 100vh;
+            display: flex; 
+            width: 100%; 
+            min-height: 100vh;
         }
 
-        /* Left side - Welcome Message */
         .welcome-section {
             flex: 1;
             background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
@@ -41,15 +40,15 @@
         }
 
         .welcome-title {
-            font-size: 85px;
-            font-weight: 700;
+            font-size: 85px; 
+            font-weight: 700; 
             margin-bottom: 30px;
         }
 
         .welcome-subtitle {
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 40px;
+            font-size: 18px; 
+            line-height: 1.6; 
+            margin-bottom: 40px; 
             opacity: 0.9;
         }
 
@@ -67,11 +66,10 @@
         }
 
         .signin-button:hover {
-            background-color: white;
+            background-color: white; 
             color: rgb(75, 171, 255);
         }
 
-        /* Right side - Sign up form */
         .signup-section {
             flex: 1;
             background-color: #f8f9fa;
@@ -83,15 +81,15 @@
         }
 
         .signup-form {
-            width: 100%;
+            width: 100%; 
             max-width: 400px;
         }
 
         .signup-title {
-            font-size: 80px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 30px;
+            font-size: 80px; 
+            font-weight: 700; 
+            color: #1a1a1a; 
+            margin-bottom: 30px; 
             text-align: center;
         }
 
@@ -100,10 +98,10 @@
         }
 
         .signup-subtitle {
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 40px;
-            line-height: 1.5;
+            font-size: 18px; 
+            color: #666; 
+            margin-bottom: 40px; 
+            line-height: 1.5; 
             text-align: center;
         }
 
@@ -112,11 +110,11 @@
         }
 
         .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 8px;
+            display: block; 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #1a1a1a; 
+            margin-bottom: 8px; 
             text-transform: uppercase;
         }
 
@@ -132,7 +130,7 @@
         }
 
         .form-input:focus {
-            outline: none;
+            outline: none; 
             background-color: #ddd;
         }
 
@@ -155,40 +153,25 @@
             background-color: #1976D2;
         }
 
-        /* Responsive design */
+        .error-message {
+            color: red; 
+            font-size: 14px; 
+            text-align: center; 
+            margin-top: 10px; 
+            display: none;
+        }
+
         @media (max-width: 768px) {
-            .container {
-                flex-direction: column-reverse;
-            }
-
-            .welcome-section,
-            .signup-section {
-                flex: none;
-                height: auto;
-                min-height: 50vh;
-            }
-
-            .signup-title {
-                font-size: 36px;
-            }
-
-            .welcome-title {
-                font-size: 48px;
-            }
-
-            .signup-section {
-                padding: 20px;
-            }
-
-            .welcome-section {
-                padding: 20px;
-            }
+            .container {flex-direction: column-reverse;}
+            .welcome-section, .signup-section {flex: none; height: auto; min-height: 50vh;}
+            .signup-title {font-size: 36px;}
+            .welcome-title {font-size: 48px;}
+            .signup-section, .welcome-section {padding: 20px;}
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Left Side - Welcome Message -->
         <div class="welcome-section">
             <h2 class="welcome-title">Selamat Datang</h2>
             <p class="welcome-subtitle">
@@ -198,43 +181,47 @@
             <button class="signin-button" onclick="window.location.href='login.php'">SIGN IN</button>
         </div>
 
-        <!-- Right Side - Sign Up Form -->
         <div class="signup-section">
             <div class="signup-form">
                 <h1 class="signup-title">Sign <span class="highlight">up</span></h1>
-                <p class="signup-subtitle">
-                    Silakan isi form berikut untuk membuat akun baru
-                </p>
+                <p class="signup-subtitle">Silakan isi form berikut untuk membuat akun baru</p>
 
-                <form>
+                <form id="signupForm">
                     <div class="form-group">
                         <label class="form-label" for="name">NAMA LENGKAP</label>
                         <input type="text" id="name" class="form-input" required>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label" for="email">EMAIL</label>
                         <input type="email" id="email" class="form-input" required>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label" for="password">PASSWORD</label>
                         <input type="password" id="password" class="form-input" required>
                     </div>
-
                     <button type="submit" class="signup-button">DAFTAR</button>
+                    <p id="errorMessage" class="error-message">Semua field wajib diisi!</p>
                 </form>
             </div>
         </div>
     </div>
 
     <script>
-        // Aksi ketika form sign up disubmit
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Sign up berhasil!');
-            // Redirect ke halaman login setelah signup
-            window.location.href = 'login.php';
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!name || !email || !password) {
+                errorMessage.style.display = "block";
+            } else {
+                errorMessage.style.display = "none";
+                alert('Sign up berhasil!');
+                window.location.href = 'login.php';
+            }
         });
     </script>
 </body>
