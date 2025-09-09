@@ -172,7 +172,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Left Side - Sign In Form -->
         <div class="signin-section">
             <div class="signin-form">
                 <h1 class="signin-title">Sign <span class="highlight">in</span></h1>
@@ -197,7 +196,6 @@
             </div>
         </div>
 
-        <!-- Right Side - Welcome Message -->
         <div class="welcome-section">
             <h2 class="welcome-title">Halo, Kawan</h2>
             <p class="welcome-subtitle">Jika anda masih belum mempunyai akun,<br>daftarkan diri anda terlebih dahulu disini</p>
