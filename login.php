@@ -196,7 +196,6 @@
                     <button type="submit" class="signin-button">SIGN IN</button>
                     <p id="errorMessage" class="error-message">Email atau password salah!</p>
                 </form>
-
                 
                 <p class="forgot-password">lupa kata sandi anda?</p>
             </div>
@@ -214,14 +213,11 @@
         const validPassword = "12345";
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            if (email === validEmail && password === validPassword) {
-                window.location.href = 'index.php';
-            } else {
+            if (email !== validEmail || password !== validPassword) {
+                e.preventDefault();
                 document.getElementById('errorMessage').style.display = "block";
             }
         });

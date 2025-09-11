@@ -186,18 +186,19 @@
                 <h1 class="signup-title">Sign <span class="highlight">up</span></h1>
                 <p class="signup-subtitle">Silakan isi form berikut untuk membuat akun baru</p>
 
-                <form id="signupForm">
+                <!-- FORM SIGN UP -->
+                <form id="signupForm" method="post" action="signup.php">
                     <div class="form-group">
                         <label class="form-label" for="name">NAMA LENGKAP</label>
-                        <input type="text" id="name" class="form-input" required>
+                        <input type="text" id="name" name="name" class="form-input" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="email">EMAIL</label>
-                        <input type="email" id="email" class="form-input" required>
+                        <input type="email" id="email" name="email" class="form-input" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="password">PASSWORD</label>
-                        <input type="password" id="password" class="form-input" required>
+                        <input type="password" id="password" name="password" class="form-input" required>
                     </div>
                     <button type="submit" class="signup-button">DAFTAR</button>
                     <p id="errorMessage" class="error-message">Semua field wajib diisi!</p>
@@ -208,19 +209,16 @@
 
     <script>
         document.getElementById('signupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             const errorMessage = document.getElementById('errorMessage');
 
             if (!name || !email || !password) {
+                e.preventDefault();
                 errorMessage.style.display = "block";
             } else {
                 errorMessage.style.display = "none";
-                alert('Sign up berhasil!');
-                window.location.href = 'login.php';
             }
         });
     </script>
