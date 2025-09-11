@@ -186,7 +186,6 @@
                 <h1 class="signup-title">Sign <span class="highlight">up</span></h1>
                 <p class="signup-subtitle">Silakan isi form berikut untuk membuat akun baru</p>
 
-                <!-- FORM SIGN UP -->
                 <form id="signupForm" method="post" action="signup.php">
                     <div class="form-group">
                         <label class="form-label" for="name">NAMA LENGKAP</label>
