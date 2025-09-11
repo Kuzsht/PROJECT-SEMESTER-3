@@ -223,7 +223,7 @@
         });
 
         document.querySelector('.signup-button').addEventListener('click', function() {
-            window.location.href = 'signup.php';
+            window.location.href = 'index.php';
         });
     </script>
 </body>
