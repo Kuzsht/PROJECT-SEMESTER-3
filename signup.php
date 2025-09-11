@@ -208,16 +208,20 @@
 
     <script>
         document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             const errorMessage = document.getElementById('errorMessage');
 
             if (!name || !email || !password) {
-                e.preventDefault();
                 errorMessage.style.display = "block";
             } else {
                 errorMessage.style.display = "none";
+
+                alert("Pendaftaran berhasil! Silakan login.");
+                window.location.href = "login.php";
             }
         });
     </script>
