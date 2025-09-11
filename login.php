@@ -182,20 +182,21 @@
                 <h1 class="signin-title">Sign <span class="highlight">in</span></h1>
                 <p class="signin-subtitle">Jika anda telah memiliki akun,<br>gunakan akun anda</p>
                 
-                <form id="loginForm">
+                <form id="loginForm" method="post" action="login.php">
                     <div class="form-group">
                         <label class="form-label" for="email">EMAIL</label>
-                        <input type="email" id="email" class="form-input" required>
+                        <input type="email" id="email" name="email" class="form-input" required>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label" for="password">PASSWORD</label>
-                        <input type="password" id="password" class="form-input" required>
+                        <input type="password" id="password" name="password" class="form-input" required>
                     </div>
                     
                     <button type="submit" class="signin-button">SIGN IN</button>
                     <p id="errorMessage" class="error-message">Email atau password salah!</p>
                 </form>
+
                 
                 <p class="forgot-password">lupa kata sandi anda?</p>
             </div>
