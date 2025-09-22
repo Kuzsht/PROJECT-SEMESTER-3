@@ -120,11 +120,11 @@
 
         .form-input {
             width: 100%;
-            padding: 16px;
+            padding: 10px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             background-color: #e5e5e5;
-            font-size: 16px;
+            font-size: 14px;
             color: #1a1a1a;
             transition: background-color 0.3s ease;
         }
@@ -136,12 +136,12 @@
 
         .signup-button {
             width: 100%;
-            padding: 16px;
+            padding: 12px;
             background-color: rgb(75, 171, 255);
             color: white;
             border: none;
-            border-radius: 25px;
-            font-size: 16px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s ease;
@@ -178,18 +178,22 @@
                 Jika anda sudah memiliki akun,<br>
                 silakan masuk melalui halaman login
             </p>
-            <button class="signin-button" onclick="window.location.href='login.php'">SIGN IN</button>
+            <button class="signin-button" onclick="window.location.href='index.php'">SIGN IN</button>
         </div>
 
         <div class="signup-section">
             <div class="signup-form">
                 <h1 class="signup-title">Sign <span class="highlight">up</span></h1>
-                <p class="signup-subtitle">Silakan isi form berikut untuk membuat akun baru</p>
+                <p class="signup-subtitle">Silakan isi form berikut untuk membuat sebuah akun baru</p>
 
                 <form id="signupForm" method="post" action="signup.php">
                     <div class="form-group">
                         <label class="form-label" for="name">NAMA LENGKAP</label>
                         <input type="text" id="name" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="username">USERNAME</label>
+                        <input type="text" id="username" name="username" class="form-input" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="email">EMAIL</label>
@@ -211,17 +215,18 @@
             e.preventDefault();
 
             const name = document.getElementById('name').value.trim();
+            const username = document.getElementById('username').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             const errorMessage = document.getElementById('errorMessage');
 
-            if (!name || !email || !password) {
+            if (!name || !username || !email || !password) {
                 errorMessage.style.display = "block";
             } else {
                 errorMessage.style.display = "none";
 
                 alert("Pendaftaran berhasil! Silakan login.");
-                window.location.href = "login.php";
+                window.location.href = "index.php";
             }
         });
     </script>
