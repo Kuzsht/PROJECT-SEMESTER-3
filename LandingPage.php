@@ -86,13 +86,13 @@ if (!isset($_SESSION["username"])) {
 
     /* Hero Section */
     .hero {
-      height: 70vh;
+      height: 90vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       background: url('hero-plane.jpg') no-repeat center center/cover;
-      color: white;
+      color: rgb(75, 171, 255);
       text-align: center;
       padding: 20px;
     }
@@ -126,12 +126,13 @@ if (!isset($_SESSION["username"])) {
 
     /* Features */
     .features {
-      padding: 60px 20px;
+      padding: 0px 20px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 30px;
-      max-width: 1000px;
+      max-width: 50%;
       margin: auto;
+      margin-top: 50px;
     }
 
     .feature-card {
@@ -206,6 +207,8 @@ if (!isset($_SESSION["username"])) {
     <p>AIRtix.id hadir untuk memudahkan perjalanan Anda</p>
     <button onclick="window.location.href='search.php'">Mulai Pesan</button>
   </section>
+
+    <h2 style="text-align:center; font-size:36px; font-weight:700; margin:50px 0 30px; color:#1976D2;">Layanan AIRtix.id</h2>
 
   <!-- Features -->
   <section class="features">
