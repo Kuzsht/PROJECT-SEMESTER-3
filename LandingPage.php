@@ -84,7 +84,6 @@ if (!isset($_SESSION["username"])) {
       background: #c0392b;
     }
 
-    /* Hero Section */
     .hero {
       height: 90vh;
       display: flex;
@@ -124,7 +123,6 @@ if (!isset($_SESSION["username"])) {
       background: #1976D2;
     }
 
-    /* Features */
     .features {
       padding: 0px 20px;
       display: grid;
@@ -175,7 +173,6 @@ if (!isset($_SESSION["username"])) {
       background: #1976D2;
     }
 
-    /* Footer */
     footer {
       background: #1a1a1a;
       color: #ccc;
@@ -186,7 +183,6 @@ if (!isset($_SESSION["username"])) {
   </style>
 </head>
 <body>
-  <!-- Navbar -->
   <header>
     <h1>AIRtix.id</h1>
     <nav>
@@ -201,7 +197,6 @@ if (!isset($_SESSION["username"])) {
     </nav>
   </header>
 
-  <!-- Hero Section -->
   <section class="hero">
     <h2>Pesan Tiket Pesawat dengan Mudah</h2>
     <p>AIRtix.id hadir untuk memudahkan perjalanan Anda</p>
@@ -210,7 +205,6 @@ if (!isset($_SESSION["username"])) {
 
     <h2 style="text-align:center; font-size:36px; font-weight:700; margin:50px 0 30px; color:#1976D2;">Layanan AIRtix.id</h2>
 
-  <!-- Features -->
   <section class="features">
     <div class="feature-card">
       <h3>Pesan Tiket</h3>
@@ -234,7 +228,6 @@ if (!isset($_SESSION["username"])) {
     </div>
   </section>
 
-  <!-- Footer -->
   <footer>
     <p>&copy; 2025 AIRtix.id | All Rights Reserved</p>
   </footer>

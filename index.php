@@ -11,12 +11,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = $_POST["email"];
     $password = $_POST["password"];
 
-    // Validasi login (contoh hardcode, bisa diganti DB)
+    // Validasi login
     $validEmail = "admin@gmail.com";
     $validPassword = "12345";
 
     if ($email === $validEmail && $password === $validPassword) {
-        $_SESSION["username"] = "Admin"; // atau pakai $email
+        $_SESSION["username"] = "Admin";
         header("Location: LandingPage.php");
         exit();
     } else {
