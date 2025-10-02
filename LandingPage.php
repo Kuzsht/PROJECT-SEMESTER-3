@@ -406,9 +406,9 @@ $name = $_SESSION['name'] ?? 'User';
     <nav>
       <ul>
         <li class="username">Halo, <?php echo htmlspecialchars($username); ?>!</li>
-        <li><a href="history.php">📋 Riwayat</a></li>
-        <li><a href="checkin.php">✅ Check-in</a></li>
-        <li><a href="profile.php">👤 Profil</a></li>
+        <li><a href="history.php">Riwayat</a></li>
+        <li><a href="checkin.php">Check-in</a></li>
+        <li><a href="profile.php">Profil</a></li>
         <li><a class="logout-btn" href="logout.php">Logout</a></li>
       </ul>
     </nav>
@@ -476,7 +476,7 @@ $name = $_SESSION['name'] ?? 'User';
   </section>
 
   <footer>
-    <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
+    <p>&copy; 2025 AIRtix.id | All Rights Reserved</p>
   </footer>
 </body>
 </html>

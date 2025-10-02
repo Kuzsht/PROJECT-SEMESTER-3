@@ -19,7 +19,9 @@ if (!is_dir($uploadDir)) {
 }
 
 $message = "";
+$messageType = "";
 
+// Handle upload foto profil
 if (isset($_POST['upload'])) {
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -35,36 +37,76 @@ if (isset($_POST['upload'])) {
                         unlink($oldFile);
                     }
                 }
-                $message = "success|Foto profil berhasil diunggah!";
+                $message = "Foto profil berhasil diunggah!";
+                $messageType = "success";
             } else {
-                $message = "error|Gagal mengunggah foto!";
+                $message = "Gagal mengunggah foto!";
+                $messageType = "error";
             }
         } else {
-            $message = "error|Format file tidak didukung!";
+            $message = "Format file tidak didukung!";
+            $messageType = "error";
         }
-        header("Location: profile.php");
-        exit();
+    } else {
+        $message = "Tidak ada file yang dipilih!";
+        $messageType = "error";
     }
 }
 
+// Handle edit foto profil
+if (isset($_POST['edit'])) {
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $fileType = $_FILES['photo']['type'];
+        
+        if (in_array($fileType, $allowedTypes)) {
+            $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+            $newFile = $uploadDir . safe_name($email) . "." . $ext;
+            
+            // Hapus foto lama
+            foreach (glob($uploadDir . safe_name($email) . ".*") as $oldFile) {
+                unlink($oldFile);
+            }
+            
+            if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFile)) {
+                $message = "Foto profil berhasil diubah!";
+                $messageType = "success";
+            } else {
+                $message = "Gagal mengubah foto!";
+                $messageType = "error";
+            }
+        } else {
+            $message = "Format file tidak didukung!";
+            $messageType = "error";
+        }
+    } else {
+        $message = "Tidak ada file yang dipilih!";
+        $messageType = "error";
+    }
+}
+
+// Handle hapus foto profil
 if (isset($_POST['delete'])) {
+    $deleted = false;
     foreach (glob($uploadDir . safe_name($email) . ".*") as $file) {
         unlink($file);
+        $deleted = true;
     }
-    $message = "success|Foto profil berhasil dihapus!";
-    header("Location: profile.php");
-    exit();
+    if ($deleted) {
+        $message = "Foto profil berhasil dihapus!";
+        $messageType = "success";
+    }
 }
 
+// Cek apakah foto profil ada
 $photoFiles = glob($uploadDir . safe_name($email) . ".*");
-if (!empty($photoFiles)) {
+$hasPhoto = !empty($photoFiles);
+
+if ($hasPhoto) {
     $photo = "uploads/" . basename($photoFiles[0]) . "?t=" . time();
 } else {
-    $photo = "default.png";
-}
-
-if (isset($_GET['msg'])) {
-    $message = $_GET['msg'];
+    // Gunakan foto default
+    $photo = "https://ui-avatars.com/api/?name=" . urlencode($name) . "&size=200&background=4babff&color=fff&bold=true";
 }
 ?>
 
@@ -91,7 +133,6 @@ if (isset($_GET['msg'])) {
       color: #333;
     }
 
-    /* Header - Style index.php */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -151,7 +192,6 @@ if (isset($_GET['msg'])) {
       box-shadow: 0px 10px 20px rgba(255, 255, 255, 0.5);
     }
 
-    /* Main Content */
     main {
       flex: 1;
       padding: 80px 40px;
@@ -198,7 +238,6 @@ if (isset($_GET['msg'])) {
       font-size: 16px;
     }
 
-    /* Photo Section */
     .photo-section {
       text-align: center;
       margin-bottom: 50px;
@@ -259,6 +298,17 @@ if (isset($_GET['msg'])) {
       box-shadow: 0 10px 35px rgba(75, 171, 255, 0.5);
     }
 
+    .btn-edit {
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      box-shadow: 0 6px 25px rgba(243, 156, 18, 0.4);
+    }
+
+    .btn-edit:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 35px rgba(243, 156, 18, 0.5);
+    }
+
     .btn-delete {
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
       color: white;
@@ -279,7 +329,6 @@ if (isset($_GET['msg'])) {
       display: none;
     }
 
-    /* Profile Info Cards */
     .profile-info {
       display: grid;
       gap: 25px;
@@ -323,7 +372,6 @@ if (isset($_GET['msg'])) {
       font-weight: 600;
     }
 
-    /* Message Alert */
     .message {
       text-align: center;
       padding: 18px 30px;
@@ -357,7 +405,6 @@ if (isset($_GET['msg'])) {
       border: 2px solid #f5c6cb;
     }
 
-    /* Footer */
     footer {
       background: #1a1a1a;
       color: #ccc;
@@ -434,11 +481,9 @@ if (isset($_GET['msg'])) {
         <p>Kelola informasi akun Anda dengan mudah</p>
       </div>
 
-      <?php if (!empty($message)): 
-        list($type, $text) = explode('|', $message);
-      ?>
-        <div class="message <?php echo $type; ?>">
-          <?php echo htmlspecialchars($text); ?>
+      <?php if (!empty($message)): ?>
+        <div class="message <?php echo $messageType; ?>">
+          <?php echo htmlspecialchars($message); ?>
         </div>
       <?php endif; ?>
 
@@ -448,21 +493,34 @@ if (isset($_GET['msg'])) {
         </div>
         
         <div class="photo-buttons">
-          <form method="POST" enctype="multipart/form-data" style="display: inline-block;">
-            <div class="file-input-wrapper">
-              <input type="file" name="photo" id="photoInput" accept="image/*" onchange="previewImage(this); this.form.submit();">
-              <label for="photoInput" class="btn btn-upload">
-                <?php echo !empty($photoFiles) ? '✏️ Edit Foto' : '📤 Upload Foto'; ?>
-              </label>
-            </div>
-          </form>
+          <?php if (!$hasPhoto): ?>
+            <!-- Tombol Upload jika belum ada foto -->
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+              <div class="file-input-wrapper">
+                <input type="file" name="photo" id="photoUpload" accept="image/*" onchange="this.form.submit();">
+                <label for="photoUpload" class="btn btn-upload">
+                  📤 Upload Foto
+                </label>
+                <input type="hidden" name="upload" value="1">
+              </div>
+            </form>
+          <?php else: ?>
+            <!-- Tombol Edit dan Hapus jika sudah ada foto -->
+            <form method="POST" enctype="multipart/form-data" id="editForm">
+              <div class="file-input-wrapper">
+                <input type="file" name="photo" id="photoEdit" accept="image/*" onchange="this.form.submit();">
+                <label for="photoEdit" class="btn btn-edit">
+                  ✏️ Edit Foto
+                </label>
+                <input type="hidden" name="edit" value="1">
+              </div>
+            </form>
 
-          <?php if (!empty($photoFiles)): ?>
-          <form method="POST" style="display: inline-block;" onsubmit="return confirm('Yakin ingin menghapus foto profil?');">
-            <button type="submit" name="delete" class="btn btn-delete">
-              🗑️ Hapus Foto
-            </button>
-          </form>
+            <form method="POST" onsubmit="return confirm('Yakin ingin menghapus foto profil?');">
+              <button type="submit" name="delete" class="btn btn-delete">
+                🗑️ Hapus Foto
+              </button>
+            </form>
           <?php endif; ?>
         </div>
       </div>
@@ -506,18 +564,5 @@ if (isset($_GET['msg'])) {
   <footer>
     <p>&copy; 2025 AIRtix.id | All Rights Reserved</p>
   </footer>
-
-  <script>
-    // Preview image before upload
-    function previewImage(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById('photoPreview').src = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-  </script>
 </body>
 </html>
