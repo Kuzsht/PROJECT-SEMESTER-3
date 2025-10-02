@@ -1,29 +1,52 @@
 <?php
 session_start();
 
-// Kalau sudah login, langsung ke dashboard
-if (isset($_SESSION["username"])) {
+// jika sudah login -> Landing Page
+if (isset($_SESSION['email'])) {
     header("Location: LandingPage.php");
     exit();
 }
 
+$error = "";
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = $_POST["email"];
-    $password = $_POST["password"];
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
 
-    // Validasi login
-    $validEmail = "admin@gmail.com";
-    $validPassword = "12345";
-
-    if ($email === $validEmail && $password === $validPassword) {
-        $_SESSION["username"] = "Admin";
-        header("Location: LandingPage.php");
-        exit();
+    if ($email === '' || $password === '') {
+        $error = "Email dan password harus diisi.";
     } else {
-        $error = "Email atau password salah!";
+        $found = false;
+        $file = __DIR__ . "/users.txt";
+        if (file_exists($file) && is_readable($file)) {
+            $fh = fopen($file, "r");
+            while (($line = fgets($fh)) !== false) {
+                $line = trim($line);
+                if ($line === '') continue;
+                $parts = explode("|", $line, 2);
+                if (count($parts) < 2) continue;
+                $e = trim($parts[0]);
+                $p = trim($parts[1]);
+                if (strcasecmp($e, $email) === 0 && $p === $password) {
+                    $found = true;
+                    break;
+                }
+            }
+            fclose($fh);
+        }
+
+        if ($found) {
+            // simpan session email
+            $_SESSION['email'] = $email;
+            header("Location: profile.php");
+            exit();
+        } else {
+            $error = "Email atau password salah.";
+        }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -235,7 +258,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     </div>
                     
                     <button type="submit" class="signin-button">SIGN IN</button>
-                    <?php if (isset($error)) echo "<p class='error-message'>$error</p>"; ?>
+                    <?php if ($error !== ""): ?>
+                        <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
+                    <?php endif; ?>
                 </form>
                 
                 <p class="forgot-password">lupa kata sandi anda?</p>

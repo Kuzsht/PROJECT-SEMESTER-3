@@ -1,3 +1,51 @@
+<?php
+// register new user -> append ke users.txt
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $password2 = trim($_POST['password2'] ?? '');
+
+    $error = "";
+    if ($email === '' || $password === '') {
+        $error = "Email dan password harus diisi.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Format email tidak valid.";
+    } elseif ($password !== $password2) {
+        $error = "Konfirmasi password tidak sesuai.";
+    } else {
+        // cek apakah email sudah ada
+        $file = __DIR__ . "/users.txt";
+        $exists = false;
+        if (file_exists($file) && is_readable($file)) {
+            $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                $parts = explode("|", $line, 2);
+                if (count($parts) >= 1 && strcasecmp(trim($parts[0]), $email) === 0) {
+                    $exists = true;
+                    break;
+                }
+            }
+        }
+        if ($exists) {
+            $error = "Email sudah terdaftar.";
+        } else {
+            // append ke file (baris baru)
+            $fh = fopen($file, "a");
+            if ($fh) {
+                // jika file kosong jangan tambahkan newline ekstra di awal
+                $current = filesize($file) > 0 ? "\n" : "";
+                fwrite($fh, $current . $email . "|" . $password);
+                fclose($fh);
+                header("Location: index.php");
+                exit();
+            } else {
+                $error = "Gagal menulis ke file users.txt. Periksa permission.";
+            }
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -204,31 +252,12 @@
                         <input type="password" id="password" name="password" class="form-input" required>
                     </div>
                     <button type="submit" class="signup-button">DAFTAR</button>
-                    <p id="errorMessage" class="error-message">Semua field wajib diisi!</p>
+                    <?php if (!empty($error)): ?>
+                        <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>
     </div>
-
-    <script>
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const name = document.getElementById('name').value.trim();
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const errorMessage = document.getElementById('errorMessage');
-
-            if (!name || !username || !email || !password) {
-                errorMessage.style.display = "block";
-            } else {
-                errorMessage.style.display = "none";
-
-                alert("Pendaftaran berhasil! Silakan login.");
-                window.location.href = "index.php";
-            }
-        });
-    </script>
 </body>
 </html>

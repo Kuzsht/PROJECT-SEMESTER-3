@@ -1,9 +1,77 @@
 <?php
 session_start();
 
-// Cek apakah user sudah login
-if (!isset($_SESSION["username"])) {
+// harus login
+if (!isset($_SESSION['email'])) {
     header("Location: index.php");
+    exit();
+}
+
+$email = $_SESSION['email'];
+
+// fungsi untuk sanitize nama file dari email
+function safe_filename_from_email($email) {
+    // ganti karakter non-alphanumeric menjadi underscore
+    return preg_replace('/[^A-Za-z0-9]/', '_', $email);
+}
+
+$uploadsDir = __DIR__ . "/uploads";
+if (!is_dir($uploadsDir)) {
+    mkdir($uploadsDir, 0755, true);
+}
+
+$san = safe_filename_from_email($email);
+$profilePath = $uploadsDir . "/" . $san . ".png"; // pakai .png sebagai standar
+$relativeProfile = "uploads/" . $san . ".png";
+$default = "default.png";
+
+// jika file user belum ada -> gunakan default
+$displayPic = file_exists($profilePath) ? $relativeProfile : $default;
+$message = "";
+
+// upload / edit foto
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'upload') {
+    if (!isset($_FILES['photo'])) {
+        $message = "Tidak ada file yang diupload.";
+    } else {
+        $f = $_FILES['photo'];
+        if ($f['error'] !== UPLOAD_ERR_OK) {
+            $message = "Upload error (Kode: {$f['error']}).";
+        } else {
+            // validasi sederhana: mime image dan ukuran < 2MB (adjust jika perlu)
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime = finfo_file($finfo, $f['tmp_name']);
+            finfo_close($finfo);
+            $allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+            if (!in_array($mime, $allowed)) {
+                $message = "Tipe file tidak diperbolehkan. Gunakan PNG/JPG/GIF.";
+            } elseif ($f['size'] > 2 * 1024 * 1024) {
+                $message = "File terlalu besar (maks 2MB).";
+            } else {
+                // simpan sebagai PNG (lebih aman untuk mengganti extension sesuai mime)
+                $target = $profilePath;
+                // jika jpeg/gif, kita bisa move file langsung dan biarkan extension .png
+                if (!move_uploaded_file($f['tmp_name'], $target)) {
+                    $message = "Gagal menyimpan file upload.";
+                } else {
+                    $message = "Foto profil berhasil diupload.";
+                    header("Location: profile.php");
+                    exit();
+                }
+            }
+        }
+    }
+}
+
+// hapus foto profil
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'delete') {
+    if (file_exists($profilePath)) {
+        unlink($profilePath);
+        $message = "Foto profil dihapus.";
+    } else {
+        $message = "Foto profil tidak ditemukan.";
+    }
+    header("Location: profile.php");
     exit();
 }
 ?>
@@ -141,6 +209,10 @@ if (!isset($_SESSION["username"])) {
       </div>
     </div>
   </main>
+
+  <?php if (!empty($message)): ?>
+      <p style="color:green;"><?php echo htmlspecialchars($message); ?></p>
+  <?php endif; ?>
 
   <footer>
     <p>&copy; 2025 AIRtix.id | All Rights Reserved</p>
