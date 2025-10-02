@@ -104,7 +104,9 @@ $name = $_SESSION['name'] ?? 'User';
 
     .logout-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+      background: white;
+      color: #e74c3c;
+      box-shadow: 0px 10px 20px rgba(255, 255, 255, 0.5);
     }
 
     /* Hero Section - Style mirip index.php */
@@ -404,7 +406,6 @@ $name = $_SESSION['name'] ?? 'User';
     <nav>
       <ul>
         <li class="username">Halo, <?php echo htmlspecialchars($username); ?>!</li>
-        <li><a href="search.php">🎫 Pesan Tiket</a></li>
         <li><a href="history.php">📋 Riwayat</a></li>
         <li><a href="checkin.php">✅ Check-in</a></li>
         <li><a href="profile.php">👤 Profil</a></li>

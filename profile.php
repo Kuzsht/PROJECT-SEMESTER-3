@@ -146,7 +146,9 @@ if (isset($_GET['msg'])) {
     }
 
     .logout-btn:hover {
-      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+      background: white;
+      color: #e74c3c;
+      box-shadow: 0px 10px 20px rgba(255, 255, 255, 0.5);
     }
 
     /* Main Content */
