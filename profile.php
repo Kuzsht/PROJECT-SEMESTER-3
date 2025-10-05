@@ -466,7 +466,6 @@ if ($hasPhoto) {
   <header>
     <h1>✈️ AIRtix.id</h1>
     <nav>
-      <a href="LandingPage.php">🏠 Beranda</a>
       <a href="search.php">🎫 Pesan Tiket</a>
       <a href="history.php">📋 Riwayat</a>
       <a href="checkin.php">✅ Check-in</a>
