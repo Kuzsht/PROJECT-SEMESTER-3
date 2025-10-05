@@ -105,146 +105,231 @@ $hasPhoto = !empty($photoFiles);
 if ($hasPhoto) {
     $photo = "uploads/" . basename($photoFiles[0]) . "?t=" . time();
 } else {
-    // Gunakan foto default
     $photo = "https://ui-avatars.com/api/?name=" . urlencode($name) . "&size=200&background=4babff&color=fff&bold=true";
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profil - AIRtix.id</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: "Space Grotesk", sans-serif;
     }
 
     body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      color: #333;
+      background: #f8f9fa;
+      color: #1a1a1a;
+      overflow-x: hidden;
+    }
+
+    /* Subtle Background */
+    .bg-decorations {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .decoration-circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.04;
+    }
+
+    .decoration-circle:nth-child(1) {
+      width: 600px;
+      height: 600px;
+      background: linear-gradient(135deg, rgb(75, 171, 255), #1976D2);
+      top: -200px;
+      right: -200px;
+    }
+
+    .decoration-circle:nth-child(2) {
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(225deg, #1976D2, rgb(75, 171, 255));
+      bottom: -150px;
+      left: -150px;
     }
 
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
-      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 4px 20px rgba(75, 171, 255, 0.3);
+      color: white;
       position: sticky;
       top: 0;
       z-index: 1000;
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.3);
     }
 
-    header h1 {
-      font-size: 32px;
-      font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-      animation: fadeIn 1s ease;
+    .logo-link {
+      text-decoration: none;
+      color: white;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .logo-link:hover {
+      opacity: 0.85;
     }
 
-    nav {
+    .logo-link h1 {
+      font-size: 36px;
+      font-weight: 800;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+      letter-spacing: -1px;
+    }
+
+    nav ul {
+      list-style: none;
       display: flex;
-      gap: 15px;
+      gap: 12px;
       align-items: center;
-      flex-wrap: wrap;
     }
 
-    nav a {
+    nav a, .username-btn {
       color: white;
       text-decoration: none;
       font-weight: 600;
       transition: all 0.3s ease;
-      padding: 10px 18px;
-      border-radius: 12px;
+      padding: 12px 22px;
+      border-radius: 15px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      display: inline-block;
     }
 
-    nav a:hover {
+    nav a:hover, .username-btn:hover {
       background: rgba(255,255,255,0.2);
       transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
+    }
+
+    .username-btn {
+      font-weight: 700;
+      padding: 12px 26px;
+      background: rgba(255,255,255,0.25);
+      border: 2px solid rgba(255,255,255,0.3);
     }
 
     .logout-btn {
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      padding: 10px 20px;
+      padding: 12px 26px;
       border-radius: 25px;
-      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
     }
 
     .logout-btn:hover {
+      box-shadow: 0 8px 30px rgba(255, 0, 0, 1);
       background: white;
-      color: #e74c3c;
-      box-shadow: 0px 10px 20px rgba(255, 255, 255, 0.5);
+      color: rgba(255, 0, 0, 0.5);
     }
 
+    /* Main Content */
     main {
-      flex: 1;
-      padding: 80px 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .profile-container {
-      background: white;
-      padding: 60px 50px;
-      border-radius: 25px;
-      box-shadow: 0 15px 50px rgba(0,0,0,0.15);
-      width: 100%;
-      max-width: 900px;
-      animation: fadeInUp 0.8s ease;
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(40px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      padding: 80px 40px 140px;
+      max-width: 1400px;
+      margin: auto;
     }
 
     .profile-header {
       text-align: center;
-      margin-bottom: 50px;
+      margin-bottom: 80px;
     }
 
-    .profile-header h2 {
-      font-size: 48px;
-      font-weight: 700;
+    .section-title {
+      font-size: 64px;
+      font-weight: 800;
       color: rgb(75, 171, 255);
-      margin-bottom: 12px;
+      position: relative;
+      padding-bottom: 40px;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
     }
 
-    .profile-header p {
+    .section-title::before {
+      content: attr(data-text);
+      position: absolute;
+      left: 50%;
+      top: -20px;
+      transform: translateX(-50%);
+      font-size: 90px;
+      color: transparent;
+      -webkit-text-stroke: 2px rgba(75, 171, 255, 0.06);
+      z-index: -1;
+      font-weight: 900;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 6px;
+      background: linear-gradient(90deg, transparent, rgb(75, 171, 255), #1976D2, transparent);
+      border-radius: 3px;
+      box-shadow: 0 4px 20px rgba(75, 171, 255, 0.5);
+    }
+
+    .profile-subtitle {
+      font-size: 20px;
       color: #666;
-      font-size: 16px;
+      margin-top: 20px;
     }
 
-    .photo-section {
-      text-align: center;
-      margin-bottom: 50px;
+    .profile-container {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 50px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    /* Photo Section Card */
+    .photo-card {
+      background: white;
+      border-radius: 35px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
       padding: 50px 40px;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      border-radius: 25px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: all 0.5s ease;
+      border: 3px solid rgba(75, 171, 255, 0.08);
+      height: fit-content;
+    }
+
+    .photo-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      border-radius: 35px 35px 0 0;
+    }
+
+    .photo-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 35px 80px rgba(75, 171, 255, 0.25);
+      border-color: rgb(75, 171, 255);
     }
 
     .photo-wrapper {
@@ -254,132 +339,143 @@ if ($hasPhoto) {
     }
 
     .photo-preview {
-      width: 200px;
-      height: 200px;
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
       object-fit: cover;
-      border: 6px solid white;
-      box-shadow: 0 10px 40px rgba(75, 171, 255, 0.3);
+      border: 6px solid rgba(75, 171, 255, 0.1);
+      box-shadow: 0 15px 50px rgba(75, 171, 255, 0.3);
       transition: all 0.4s ease;
     }
 
     .photo-preview:hover {
       transform: scale(1.05);
-      box-shadow: 0 15px 50px rgba(75, 171, 255, 0.5);
+      box-shadow: 0 20px 60px rgba(75, 171, 255, 0.5);
+      border-color: rgba(75, 171, 255, 0.3);
     }
 
     .photo-buttons {
       display: flex;
-      gap: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 30px;
     }
 
     .btn {
-      padding: 16px 40px;
+      padding: 16px 35px;
       border: none;
       border-radius: 30px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s ease;
       text-transform: uppercase;
       letter-spacing: 1px;
+      width: 100%;
     }
 
     .btn-upload {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       color: white;
-      box-shadow: 0 6px 25px rgba(75, 171, 255, 0.4);
+      box-shadow: 0 8px 30px rgba(75, 171, 255, 0.4);
     }
 
     .btn-upload:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 35px rgba(75, 171, 255, 0.5);
+      box-shadow: 0 12px 40px rgba(75, 171, 255, 0.5);
     }
 
     .btn-edit {
       background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
       color: white;
-      box-shadow: 0 6px 25px rgba(243, 156, 18, 0.4);
+      box-shadow: 0 8px 30px rgba(243, 156, 18, 0.4);
     }
 
     .btn-edit:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 35px rgba(243, 156, 18, 0.5);
+      box-shadow: 0 12px 40px rgba(243, 156, 18, 0.5);
     }
 
     .btn-delete {
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
       color: white;
-      box-shadow: 0 6px 25px rgba(231, 76, 60, 0.4);
+      box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);
     }
 
     .btn-delete:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 35px rgba(231, 76, 60, 0.5);
+      box-shadow: 0 12px 40px rgba(231, 76, 60, 0.5);
     }
 
     .file-input-wrapper {
       position: relative;
-      display: inline-block;
+      display: block;
     }
 
     input[type="file"] {
       display: none;
     }
 
-    .profile-info {
-      display: grid;
+    /* Info Section */
+    .info-section {
+      display: flex;
+      flex-direction: column;
       gap: 25px;
     }
 
-    .info-item {
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      padding: 28px 35px;
-      border-radius: 20px;
+    .info-card {
+      background: white;
+      border-radius: 25px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.08);
+      padding: 35px 40px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 25px;
       transition: all 0.4s ease;
-      border: 2px solid transparent;
+      border: 3px solid rgba(75, 171, 255, 0.08);
     }
 
-    .info-item:hover {
-      transform: translateX(8px);
+    .info-card:hover {
+      transform: translateX(10px);
       border-color: rgb(75, 171, 255);
-      box-shadow: 0 8px 30px rgba(75, 171, 255, 0.2);
-    }
-
-    .info-label {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 700;
-      color: #333;
-      font-size: 15px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      box-shadow: 0 20px 60px rgba(75, 171, 255, 0.2);
     }
 
     .info-icon {
-      font-size: 24px;
+      font-size: 48px;
+      min-width: 60px;
+      text-align: center;
+      filter: drop-shadow(0 5px 15px rgba(75, 171, 255, 0.3));
+    }
+
+    .info-content {
+      flex: 1;
+    }
+
+    .info-label {
+      font-weight: 700;
+      color: rgb(75, 171, 255);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
     }
 
     .info-value {
-      color: #666;
-      font-size: 17px;
+      color: #333;
+      font-size: 20px;
       font-weight: 600;
     }
 
     .message {
       text-align: center;
-      padding: 18px 30px;
-      border-radius: 15px;
-      margin-bottom: 30px;
+      padding: 20px 35px;
+      border-radius: 20px;
+      margin-bottom: 40px;
       font-weight: 600;
       animation: slideDown 0.6s ease;
-      font-size: 15px;
+      font-size: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
     @keyframes slideDown {
@@ -394,107 +490,133 @@ if ($hasPhoto) {
     }
 
     .message.success {
-      background: #d4edda;
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
       color: #155724;
-      border: 2px solid #c3e6cb;
+      border: 3px solid #b1dfbb;
     }
 
     .message.error {
-      background: #f8d7da;
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
       color: #721c24;
-      border: 2px solid #f5c6cb;
+      border: 3px solid #f1aeb5;
     }
 
     footer {
-      background: #1a1a1a;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
       text-align: center;
-      padding: 30px;
-      margin-top: auto;
+      padding: 45px;
+      margin-top: 0;
+      font-size: 16px;
+      position: relative;
     }
 
-    @media (max-width: 768px) {
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, rgb(75, 171, 255), transparent);
+    }
+
+    footer p {
+      font-weight: 600;
+    }
+
+    @media (max-width: 968px) {
       header {
         flex-direction: column;
-        gap: 15px;
+        gap: 18px;
         padding: 20px;
       }
 
-      nav {
+      .logo-link h1 {
+        font-size: 28px;
+      }
+
+      nav ul {
+        flex-wrap: wrap;
         justify-content: center;
         gap: 8px;
       }
 
       main {
-        padding: 40px 20px;
+        padding: 40px 20px 70px;
+      }
+
+      .section-title {
+        font-size: 38px;
       }
 
       .profile-container {
-        padding: 40px 25px;
+        grid-template-columns: 1fr;
+        gap: 30px;
       }
 
-      .profile-header h2 {
-        font-size: 36px;
-      }
-
-      .photo-section {
-        padding: 35px 25px;
+      .photo-card {
+        padding: 40px 30px;
       }
 
       .photo-preview {
-        width: 160px;
-        height: 160px;
+        width: 180px;
+        height: 180px;
       }
 
-      .photo-buttons {
+      .info-card {
+        padding: 25px 20px;
         flex-direction: column;
-      }
-
-      .btn {
-        width: 100%;
-      }
-
-      .info-item {
-        flex-direction: column;
-        gap: 12px;
         text-align: center;
+      }
+
+      .info-icon {
+        font-size: 40px;
       }
     }
   </style>
 </head>
 <body>
+  <div class="bg-decorations">
+    <div class="decoration-circle"></div>
+    <div class="decoration-circle"></div>
+  </div>
+
   <header>
-    <h1>✈️ AIRtix.id</h1>
+    <a href="LandingPage.php" class="logo-link">
+      <h1>✈️ AIRtix.id</h1>
+    </a>
     <nav>
-      <a href="search.php">🎫 Pesan Tiket</a>
-      <a href="history.php">📋 Riwayat</a>
-      <a href="checkin.php">✅ Check-in</a>
-      <a class="logout-btn" href="logout.php">Logout</a>
+      <ul>
+        <li><a href="history.php">📋 Riwayat</a></li>
+        <li><a href="checkin.php">✅ Check-in</a></li>
+        <li><a class="logout-btn" href="logout.php">Logout</a></li>
+      </ul>
     </nav>
   </header>
 
   <main>
-    <div class="profile-container">
-      <div class="profile-header">
-        <h2>Profil Pengguna</h2>
-        <p>Kelola informasi akun Anda dengan mudah</p>
+    <div class="profile-header">
+      <h2 class="section-title" data-text="PROFIL">Profil Pengguna</h2>
+      <p class="profile-subtitle">Kelola informasi akun dan foto profil Anda dengan mudah</p>
+    </div>
+
+    <?php if (!empty($message)): ?>
+      <div class="message <?php echo $messageType; ?>">
+        <?php echo htmlspecialchars($message); ?>
       </div>
+    <?php endif; ?>
 
-      <?php if (!empty($message)): ?>
-        <div class="message <?php echo $messageType; ?>">
-          <?php echo htmlspecialchars($message); ?>
-        </div>
-      <?php endif; ?>
-
-      <div class="photo-section">
+    <div class="profile-container">
+      <!-- Photo Section -->
+      <div class="photo-card">
         <div class="photo-wrapper">
-          <img src="<?php echo htmlspecialchars($photo); ?>" alt="Foto Profil" class="photo-preview" id="photoPreview">
+          <img src="<?php echo htmlspecialchars($photo); ?>" alt="Foto Profil" class="photo-preview">
         </div>
         
         <div class="photo-buttons">
           <?php if (!$hasPhoto): ?>
-            <!-- Tombol Upload jika belum ada foto -->
-            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <form method="POST" enctype="multipart/form-data">
               <div class="file-input-wrapper">
                 <input type="file" name="photo" id="photoUpload" accept="image/*" onchange="this.form.submit();">
                 <label for="photoUpload" class="btn btn-upload">
@@ -504,8 +626,7 @@ if ($hasPhoto) {
               </div>
             </form>
           <?php else: ?>
-            <!-- Tombol Edit dan Hapus jika sudah ada foto -->
-            <form method="POST" enctype="multipart/form-data" id="editForm">
+            <form method="POST" enctype="multipart/form-data">
               <div class="file-input-wrapper">
                 <input type="file" name="photo" id="photoEdit" accept="image/*" onchange="this.form.submit();">
                 <label for="photoEdit" class="btn btn-edit">
@@ -524,44 +645,45 @@ if ($hasPhoto) {
         </div>
       </div>
 
-      <div class="profile-info">
-        <div class="info-item">
-          <span class="info-label">
-            <span class="info-icon">👤</span>
-            Username
-          </span>
-          <span class="info-value"><?php echo htmlspecialchars($username); ?></span>
+      <!-- Info Section -->
+      <div class="info-section">
+        <div class="info-card">
+          <div class="info-icon">👤</div>
+          <div class="info-content">
+            <div class="info-label">Username</div>
+            <div class="info-value"><?php echo htmlspecialchars($username); ?></div>
+          </div>
         </div>
 
-        <div class="info-item">
-          <span class="info-label">
-            <span class="info-icon">✏️</span>
-            Nama Lengkap
-          </span>
-          <span class="info-value"><?php echo htmlspecialchars($name); ?></span>
+        <div class="info-card">
+          <div class="info-icon">✏️</div>
+          <div class="info-content">
+            <div class="info-label">Nama Lengkap</div>
+            <div class="info-value"><?php echo htmlspecialchars($name); ?></div>
+          </div>
         </div>
 
-        <div class="info-item">
-          <span class="info-label">
-            <span class="info-icon">📧</span>
-            Email
-          </span>
-          <span class="info-value"><?php echo htmlspecialchars($email); ?></span>
+        <div class="info-card">
+          <div class="info-icon">📧</div>
+          <div class="info-content">
+            <div class="info-label">Email</div>
+            <div class="info-value"><?php echo htmlspecialchars($email); ?></div>
+          </div>
         </div>
 
-        <div class="info-item">
-          <span class="info-label">
-            <span class="info-icon">🔒</span>
-            Password
-          </span>
-          <span class="info-value">••••••••</span>
+        <div class="info-card">
+          <div class="info-icon">🔒</div>
+          <div class="info-content">
+            <div class="info-label">Password</div>
+            <div class="info-value">••••••••</div>
+          </div>
         </div>
       </div>
     </div>
   </main>
 
   <footer>
-    <p>&copy; 2025 AIRtix.id | All Rights Reserved</p>
+    <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
   </footer>
 </body>
 </html>
