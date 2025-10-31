@@ -1,70 +1,37 @@
 <?php
 session_start();
+include 'connector.php';
 
-// Redirect jika sudah login
-if (isset($_SESSION['email'])) {
+if (isset($_SESSION['username'])) {
     header("Location: LandingPage.php");
     exit();
 }
 
-$error = "";
-$success = "";
+$message = "";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name = trim($_POST['name'] ?? '');
-    $username = trim($_POST['username'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $password = trim($_POST['password'] ?? '');
-    $password2 = trim($_POST['password2'] ?? '');
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = trim($_POST['name']);
+    $email_user = trim($_POST['email']);
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    // Validasi input
-    if ($name === '' || $username === '' || $email === '' || $password === '') {
-        $error = "Semua field harus diisi!";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Format email tidak valid!";
-    } elseif ($password !== $password2) {
-        $error = "Konfirmasi password tidak sesuai!";
+    $checkUser = mysqli_query($conn, "SELECT * FROM user WHERE username='$username' OR email_user='$email_user'");
+    if (mysqli_num_rows($checkUser) > 0) {
+        $message = "username sudah ada, gunakan username lainnya";
     } else {
-        $file = __DIR__ . "/users.txt";
-        $exists = false;
-        
-        // Cek apakah email atau username sudah ada
-        if (file_exists($file) && is_readable($file)) {
-            $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                $parts = explode("|", $line);
-                if (count($parts) >= 3) {
-                    if (strcasecmp(trim($parts[0]), $email) === 0) {
-                        $exists = true;
-                        $error = "Email sudah terdaftar!";
-                        break;
-                    }
-                    if (strcasecmp(trim($parts[1]), $username) === 0) {
-                        $exists = true;
-                        $error = "Username sudah digunakan!";
-                        break;
-                    }
-                }
-            }
-        }
-        
-        if (!$exists) {
-            // Format: email|username|name|password
-            $fh = fopen($file, "a");
-            if ($fh) {
-                $current = filesize($file) > 0 ? "\n" : "";
-                fwrite($fh, $current . $email . "|" . $username . "|" . $name . "|" . $password);
-                fclose($fh);
-                $success = "Pendaftaran berhasil! Silakan login.";
-                // Redirect ke login setelah 2 detik
-                header("refresh:2;url=index.php");
-            } else {
-                $error = "Gagal menulis ke file. Periksa permission.";
-            }
+        $insert = mysqli_query($conn, "INSERT INTO user (email_user, username, name, password) 
+                                       VALUES ('$email_user', '$username', '$name', '$password')");
+        if ($insert) {
+            $message = "Registrasi berhasil! Silakan login.";
+            header("refresh:2; url=index.php");
+            exit();
+        } else {
+            $message = "Terjadi kesalahan saat registrasi: " . mysqli_error($conn);
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -369,6 +336,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <h1 class="signup-title">Sign <span class="highlight">up</span></h1>
                 <p class="signup-subtitle">Daftarkan diri Anda untuk memulai perjalanan bersama AIRtix.id</p>
 
+                <?php if ($message): ?>
+                    <p style="color:<?= strpos($message, 'berhasil') !== false ? 'green' : 'red'; ?>;">
+                        <?= $message ?>
+                    </p>
+                    <br>
+                <?php endif; ?>
+
                 <form method="POST" action="">
                     <div class="form-group">
                         <label class="form-label" for="name">NAMA LENGKAP</label>
@@ -386,18 +360,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <label class="form-label" for="password">PASSWORD</label>
                         <input type="password" id="password" name="password" class="form-input" required>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="password2">KONFIRMASI PASSWORD</label>
-                        <input type="password" id="password2" name="password2" class="form-input" required>
-                    </div>
                     <button type="submit" class="signup-button">DAFTAR</button>
-                    
-                    <?php if ($error): ?>
-                        <div class="message error-message"><?php echo htmlspecialchars($error); ?></div>
-                    <?php endif; ?>
-                    <?php if ($success): ?>
-                        <div class="message success-message"><?php echo htmlspecialchars($success); ?></div>
-                    <?php endif; ?>
                 </form>
             </div>
         </div>

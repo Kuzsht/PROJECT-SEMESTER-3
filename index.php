@@ -1,68 +1,37 @@
 <?php
 session_start();
+include 'connector.php';
 
-// Redirect jika sudah login
-if (isset($_SESSION['email'])) {
+if (isset($_SESSION['username'])) {
     header("Location: LandingPage.php");
     exit();
 }
 
-$error = "";
+$message = "";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = trim($_POST['email'] ?? '');
-    $password = trim($_POST['password'] ?? '');
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email_user = trim($_POST['email']);
+    $password = trim($_POST['password']);
 
-    if ($email !== '' && $password !== '') {
-        $file = __DIR__ . "/users.txt";
-        $found = false;
-        $userData = [];
-        
-        if (file_exists($file)) {
-            // Menggunakan fgets untuk membaca file per baris
-            $fh = fopen($file, "r");
-            if ($fh) {
-                while (($line = fgets($fh)) !== false) {
-                    $line = trim($line);
-                    if ($line === '') continue;
-                    
-                    // Format: email|username|name|password
-                    $parts = explode("|", $line);
-                    if (count($parts) >= 4) {
-                        $fEmail = trim($parts[0]);
-                        $fUsername = trim($parts[1]);
-                        $fName = trim($parts[2]);
-                        $fPass = trim($parts[3]);
-                        
-                        if (strcasecmp($fEmail, $email) === 0 && $fPass === $password) {
-                            $found = true;
-                            $userData = [
-                                'email' => $fEmail,
-                                'username' => $fUsername,
-                                'name' => $fName
-                            ];
-                            break;
-                        }
-                    }
-                }
-                fclose($fh);
-            }
-        }
+    $query = "SELECT * FROM user WHERE email_user='$email_user' AND password='$password'";
+    $result = mysqli_query($conn, $query);
 
-        if ($found) {
-            $_SESSION['email'] = $userData['email'];
-            $_SESSION['username'] = $userData['username'];
-            $_SESSION['name'] = $userData['name'];
-            header("Location: LandingPage.php");
-            exit();
-        } else {
-            $error = "Email atau password salah!";
-        }
+    if (mysqli_num_rows($result) == 1) {
+        $row = mysqli_fetch_assoc($result);
+
+        $_SESSION['id_user'] = $row['id_user'];
+        $_SESSION['username'] = $row['username'];
+        $_SESSION['name'] = $row['name'];
+        $_SESSION['email_user'] = $row['email_user'];
+
+        header("Location: LandingPage.php");
+        exit();
     } else {
-        $error = "Email dan password wajib diisi!";
+        $message = "email atau password tidak ditemukan";
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -361,6 +330,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <h1 class="signin-title">Sign <span class="highlight">in</span></h1>
                 <p class="signin-subtitle">Selamat datang kembali!<br>Masuk untuk melanjutkan perjalanan Anda</p>
                 
+                <?php if ($message): ?>
+                    <p style="color:red;"><?= $message ?></p>
+                    <br>
+                <?php endif; ?>
+
                 <form method="POST" action="">
                     <div class="form-group">
                         <label class="form-label" for="email">EMAIL</label>
@@ -373,10 +347,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     </div>
                     
                     <button type="submit" class="signin-button">SIGN IN</button>
-                    
-                    <?php if ($error): ?>
-                        <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
-                    <?php endif; ?>
                 </form>
                 
                 <p class="forgot-password">Lupa kata sandi Anda?</p>

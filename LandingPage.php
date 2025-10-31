@@ -1,13 +1,15 @@
 <?php
 session_start();
-if (!isset($_SESSION['email'])) {
+include 'connector.php';
+
+if (!isset($_SESSION['username'])) {
     header("Location: index.php");
     exit();
 }
-$email = $_SESSION['email'];
-$username = $_SESSION['username'] ?? 'User';
-$name = $_SESSION['name'] ?? 'User';
+
+$username = $_SESSION['username'];
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>

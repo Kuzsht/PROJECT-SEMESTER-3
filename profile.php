@@ -1,13 +1,28 @@
 <?php
 session_start();
-if (!isset($_SESSION['email'])) {
+include 'connector.php';
+
+if (!isset($_SESSION['email_user'])) {
     header("Location: index.php");
     exit();
 }
 
-$email = $_SESSION['email'];
-$username = $_SESSION['username'] ?? 'User';
-$name = $_SESSION['name'] ?? 'User Name';
+$email = $_SESSION['email_user'];
+
+$sql = "SELECT username, name, email_user, photo FROM user WHERE email_user = '$email'";
+$result = mysqli_query($conn, $sql);
+
+if ($result && mysqli_num_rows($result) > 0) {
+    $user = mysqli_fetch_assoc($result);
+    $username = $user['username'];
+    $name = $user['name'];
+    $email = $user['email_user'];
+    $photo = $user['photo'] ?? '';
+} else {
+    $username = $_SESSION['username'] ?? 'User';
+    $name = $_SESSION['name'] ?? 'User Name';
+    $photo = '';
+}
 
 function safe_name($str) {
     return preg_replace('/[^A-Za-z0-9]/', '_', $str);
@@ -20,94 +35,54 @@ if (!is_dir($uploadDir)) {
 
 $message = "";
 $messageType = "";
+$hasPhoto = !empty($photo);
 
-// Handle upload foto profil
-if (isset($_POST['upload'])) {
+if (isset($_POST['upload']) || isset($_POST['edit'])) {
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         $fileType = $_FILES['photo']['type'];
-        
+
         if (in_array($fileType, $allowedTypes)) {
             $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-            $newFile = $uploadDir . safe_name($email) . "." . $ext;
-            
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFile)) {
-                foreach (glob($uploadDir . safe_name($email) . ".*") as $oldFile) {
-                    if ($oldFile !== $newFile) {
-                        unlink($oldFile);
-                    }
-                }
+            $newFileName = safe_name($email) . "." . $ext;
+            $newFilePath = $uploadDir . $newFileName;
+
+            if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFilePath)) {
+                $photoPathDB = "uploads/" . $newFileName;
+                $updateQuery = "UPDATE user SET photo = '$photoPathDB' WHERE email_user = '$email'";
+                mysqli_query($conn, $updateQuery);
+
                 $message = "Foto profil berhasil diunggah!";
                 $messageType = "success";
+                $photo = $photoPathDB;
+                $hasPhoto = true;
             } else {
-                $message = "Gagal mengunggah foto!";
+                $message = "Gagal memindahkan file upload.";
                 $messageType = "error";
             }
         } else {
-            $message = "Format file tidak didukung!";
+            $message = "Format file tidak didukung. Hanya JPG, PNG, dan GIF yang diizinkan.";
             $messageType = "error";
         }
     } else {
-        $message = "Tidak ada file yang dipilih!";
+        $message = "Silakan pilih file terlebih dahulu.";
         $messageType = "error";
     }
 }
 
-// Handle edit foto profil
-if (isset($_POST['edit'])) {
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        $fileType = $_FILES['photo']['type'];
-        
-        if (in_array($fileType, $allowedTypes)) {
-            $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-            $newFile = $uploadDir . safe_name($email) . "." . $ext;
-            
-            // Hapus foto lama
-            foreach (glob($uploadDir . safe_name($email) . ".*") as $oldFile) {
-                unlink($oldFile);
-            }
-            
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFile)) {
-                $message = "Foto profil berhasil diubah!";
-                $messageType = "success";
-            } else {
-                $message = "Gagal mengubah foto!";
-                $messageType = "error";
-            }
-        } else {
-            $message = "Format file tidak didukung!";
-            $messageType = "error";
-        }
-    } else {
-        $message = "Tidak ada file yang dipilih!";
-        $messageType = "error";
-    }
-}
-
-// Handle hapus foto profil
 if (isset($_POST['delete'])) {
-    $deleted = false;
-    foreach (glob($uploadDir . safe_name($email) . ".*") as $file) {
-        unlink($file);
-        $deleted = true;
+    $updateQuery = "UPDATE user SET photo = NULL WHERE email_user = '$email'";
+    mysqli_query($conn, $updateQuery);
+    if (file_exists($photo)) {
+        unlink($photo);
     }
-    if ($deleted) {
-        $message = "Foto profil berhasil dihapus!";
-        $messageType = "success";
-    }
-}
-
-// Cek apakah foto profil ada
-$photoFiles = glob($uploadDir . safe_name($email) . ".*");
-$hasPhoto = !empty($photoFiles);
-
-if ($hasPhoto) {
-    $photo = "uploads/" . basename($photoFiles[0]) . "?t=" . time();
-} else {
-    $photo = "https://ui-avatars.com/api/?name=" . urlencode($name) . "&size=200&background=4babff&color=fff&bold=true";
+    $photo = '';
+    $message = "Foto profil berhasil dihapus.";
+    $messageType = "success";
+    $hasPhoto = false;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
