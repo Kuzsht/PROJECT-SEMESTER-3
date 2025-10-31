@@ -1,5 +1,0 @@
-user1@gmail.com|user1|User Pertama|12345
-user2@gmail.com|user2|User Kedua|67890
-user3@gmail.com|user3|User Ketiga|54321
-admin@gmail.com|admin|Admin FILKOM|admin123
-rdtkw05@gmail.com|Raku|Raditya Kusuma Wardhana|12345
