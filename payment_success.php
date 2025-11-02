@@ -1,31 +1,64 @@
 <?php
 session_start();
 
+// DEBUG: Tampilkan semua data POST dan GET
+// echo "<pre style='background: yellow; padding: 20px;'>";
+// echo "=== POST DATA ===\n";
+// print_r($_POST);
+// echo "\n=== GET DATA ===\n";
+// print_r($_GET);
+// echo "</pre>";
+
 // Ambil data dari form pembayaran
 $nama = isset($_POST['nama']) ? $_POST['nama'] : '';
 $card = isset($_POST['card']) ? $_POST['card'] : '';
 
-// Ambil data penerbangan dari POST
-$from = isset($_POST['from']) ? $_POST['from'] : 'Jakarta';
-$to = isset($_POST['to']) ? $_POST['to'] : 'Bali';
-$date = isset($_POST['date']) ? $_POST['date'] : date('Y-m-d');
-$passengerCount = isset($_POST['passenger']) ? intval($_POST['passenger']) : 1;
+// Ambil data penerbangan dari POST atau GET (fallback)
+$from = isset($_POST['from']) ? $_POST['from'] : (isset($_GET['from']) ? $_GET['from'] : 'Jakarta');
+$to = isset($_POST['to']) ? $_POST['to'] : (isset($_GET['to']) ? $_GET['to'] : 'Bali');
+$date = isset($_POST['date']) ? $_POST['date'] : (isset($_GET['date']) ? $_GET['date'] : date('Y-m-d'));
+$passengerCount = isset($_POST['passenger']) ? intval($_POST['passenger']) : (isset($_GET['passenger']) ? intval($_GET['passenger']) : 1);
 
-// Perbaikan: Pastikan seats adalah array (TANPA TITIK!)
-$seatsRaw = isset($_POST['seats']) ? $_POST['seats'] : '';
-if (is_string($seatsRaw) && !empty($seatsRaw)) {
-    $seats = explode(",", $seatsRaw);
-} else if (is_array($seatsRaw)) {
-    $seats = $seatsRaw;
-} else {
-    $seats = [];
+// PERBAIKAN PENTING: Ambil seats dari POST, jika kosong coba dari GET
+$seatsRaw = '';
+if (isset($_POST['seats']) && !empty($_POST['seats'])) {
+    $seatsRaw = $_POST['seats'];
+} else if (isset($_GET['seats']) && !empty($_GET['seats'])) {
+    $seatsRaw = $_GET['seats'];
 }
+
+// DEBUG seats
+// echo "<pre style='background: #ffcccc; padding: 20px;'>";
+// echo "Seats Raw: '" . $seatsRaw . "'\n";
+// echo "Seats Type: " . gettype($seatsRaw) . "\n";
+// echo "Seats Empty?: " . (empty($seatsRaw) ? 'YES' : 'NO') . "\n";
+// echo "Seats Length: " . strlen($seatsRaw) . "\n";
+// echo "</pre>";
+
+// Konversi seats ke array
+$seats = [];
+if (!empty($seatsRaw)) {
+    if (is_string($seatsRaw)) {
+        // Jika string, pisahkan dengan koma dan bersihkan
+        $seats = array_filter(array_map('trim', explode(",", $seatsRaw)));
+    } else if (is_array($seatsRaw)) {
+        // Jika sudah array, bersihkan saja
+        $seats = array_filter(array_map('trim', $seatsRaw));
+    }
+}
+
+// DEBUG hasil konversi
+// echo "<pre style='background: #ccffcc; padding: 20px;'>";
+// echo "Seats Array: \n";
+// print_r($seats);
+// echo "Seats Count: " . count($seats) . "\n";
+// echo "</pre>";
 
 // Generate booking code
 $bookingCode = 'ATX' . strtoupper(substr(md5(time()), 0, 8));
 $totalPrice = $passengerCount * 1500000;
 
-// Simpan ke session untuk history (dalam implementasi real, simpan ke database)
+// Simpan ke session untuk history
 if (!isset($_SESSION['bookings'])) {
     $_SESSION['bookings'] = [];
 }
@@ -68,7 +101,6 @@ $_SESSION['bookings'][] = [
       min-height: 100vh;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -100,7 +132,6 @@ $_SESSION['bookings'][] = [
       left: -150px;
     }
 
-    /* Header Premium */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -158,7 +189,6 @@ $_SESSION['bookings'][] = [
       box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
     }
 
-    /* Main Content */
     main {
       flex: 1;
       padding: 80px 40px;
@@ -198,7 +228,6 @@ $_SESSION['bookings'][] = [
       left: 0;
       right: 0;
       height: 8px;
-      background: linear-gradient(90deg, #4CAF50, #388E3C);
       border-radius: 35px 35px 0 0;
     }
 
@@ -373,7 +402,6 @@ $_SESSION['bookings'][] = [
       transform: translateY(-3px);
     }
 
-    /* Footer */
     footer {
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
@@ -508,7 +536,7 @@ $_SESSION['bookings'][] = [
           <span class="summary-label">🪑 Kursi:</span>
           <div class="seats-list">
             <?php 
-            if (!empty($seats) && is_array($seats)) {
+            if (!empty($seats) && is_array($seats) && count($seats) > 0) {
               foreach ($seats as $seat) {
                 $seatClean = trim($seat);
                 if (!empty($seatClean)) {
@@ -516,7 +544,7 @@ $_SESSION['bookings'][] = [
                 }
               }
             } else {
-              echo "<span class='summary-value'>Tidak ada kursi</span>";
+              echo "<span class='summary-value' style='color: #dc3545;'>⚠️ Data kursi tidak ditemukan</span>";
             }
             ?>
           </div>
