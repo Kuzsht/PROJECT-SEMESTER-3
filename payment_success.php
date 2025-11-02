@@ -11,8 +11,8 @@ $to = isset($_POST['to']) ? $_POST['to'] : 'Bali';
 $date = isset($_POST['date']) ? $_POST['date'] : date('Y-m-d');
 $passengerCount = isset($_POST['passenger']) ? intval($_POST['passenger']) : 1;
 
-// Perbaikan: Pastikan seats adalah array
-$seatsRaw = isset($_POST['.seats']) ? $_POST['.seats'] : '';
+// Perbaikan: Pastikan seats adalah array (TANPA TITIK!)
+$seatsRaw = isset($_POST['seats']) ? $_POST['seats'] : '';
 if (is_string($seatsRaw) && !empty($seatsRaw)) {
     $seats = explode(",", $seatsRaw);
 } else if (is_array($seatsRaw)) {
@@ -198,6 +198,7 @@ $_SESSION['bookings'][] = [
       left: 0;
       right: 0;
       height: 8px;
+      background: linear-gradient(90deg, #4CAF50, #388E3C);
       border-radius: 35px 35px 0 0;
     }
 
@@ -462,6 +463,7 @@ $_SESSION['bookings'][] = [
     </a>
     <nav>
       <ul>
+        <li><a href="LandingPage.php">🏠 Beranda</a></li>
         <li><a href="history.php">📋 Riwayat</a></li>
         <li><a href="checkin.php">✅ Check-in</a></li>
       </ul>

@@ -1,27 +1,86 @@
 <?php
 session_start();
-include 'connector.php';
 
-if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
-    exit();
+// DEBUG: Tampilkan semua data POST dan GET
+// echo "<pre style='background: yellow; padding: 20px;'>";
+// echo "=== POST DATA ===\n";
+// print_r($_POST);
+// echo "\n=== GET DATA ===\n";
+// print_r($_GET);
+// echo "</pre>";
+
+// Ambil data dari form pembayaran
+$nama = isset($_POST['nama']) ? $_POST['nama'] : '';
+$card = isset($_POST['card']) ? $_POST['card'] : '';
+
+// Ambil data penerbangan dari POST atau GET (fallback)
+$from = isset($_POST['from']) ? $_POST['from'] : (isset($_GET['from']) ? $_GET['from'] : 'Jakarta');
+$to = isset($_POST['to']) ? $_POST['to'] : (isset($_GET['to']) ? $_GET['to'] : 'Bali');
+$date = isset($_POST['date']) ? $_POST['date'] : (isset($_GET['date']) ? $_GET['date'] : date('Y-m-d'));
+$passengerCount = isset($_POST['passenger']) ? intval($_POST['passenger']) : (isset($_GET['passenger']) ? intval($_GET['passenger']) : 1);
+
+// PERBAIKAN PENTING: Ambil seats dari POST, jika kosong coba dari GET
+$seatsRaw = '';
+if (isset($_POST['seats']) && !empty($_POST['seats'])) {
+    $seatsRaw = $_POST['seats'];
+} else if (isset($_GET['seats']) && !empty($_GET['seats'])) {
+    $seatsRaw = $_GET['seats'];
 }
 
-// Ambil data kursi & jumlah penumpang dari seat.php
-$seats = isset($_GET['.seats']) ? explode(",", $_GET['.seats']) : [];
-$passengerCount = isset($_GET['passenger']) ? intval($_GET['passenger']) : 1;
+// DEBUG seats
+// echo "<pre style='background: #ffcccc; padding: 20px;'>";
+// echo "Seats Raw: '" . $seatsRaw . "'\n";
+// echo "Seats Type: " . gettype($seatsRaw) . "\n";
+// echo "Seats Empty?: " . (empty($seatsRaw) ? 'YES' : 'NO') . "\n";
+// echo "Seats Length: " . strlen($seatsRaw) . "\n";
+// echo "</pre>";
 
-// Data penerbangan dari session atau GET
-$from = isset($_GET['from']) ? $_GET['from'] : 'Jakarta';
-$to = isset($_GET['to']) ? $_GET['to'] : 'Bali';
-$date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+// Konversi seats ke array
+$seats = [];
+if (!empty($seatsRaw)) {
+    if (is_string($seatsRaw)) {
+        // Jika string, pisahkan dengan koma dan bersihkan
+        $seats = array_filter(array_map('trim', explode(",", $seatsRaw)));
+    } else if (is_array($seatsRaw)) {
+        // Jika sudah array, bersihkan saja
+        $seats = array_filter(array_map('trim', $seatsRaw));
+    }
+}
+
+// DEBUG hasil konversi
+// echo "<pre style='background: #ccffcc; padding: 20px;'>";
+// echo "Seats Array: \n";
+// print_r($seats);
+// echo "Seats Count: " . count($seats) . "\n";
+// echo "</pre>";
+
+// Generate booking code
+$bookingCode = 'ATX' . strtoupper(substr(md5(time()), 0, 8));
+$totalPrice = $passengerCount * 1500000;
+
+// Simpan ke session untuk history
+if (!isset($_SESSION['bookings'])) {
+    $_SESSION['bookings'] = [];
+}
+
+$_SESSION['bookings'][] = [
+    'booking_code' => $bookingCode,
+    'from' => $from,
+    'to' => $to,
+    'date' => $date,
+    'passenger' => $passengerCount,
+    'seats' => $seats,
+    'total' => $totalPrice,
+    'status' => 'Belum Check-in',
+    'created_at' => date('Y-m-d H:i:s')
+];
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pembayaran - AIRtix.id</title>
+  <title>Pembayaran Berhasil - AIRtix.id</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -42,7 +101,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       min-height: 100vh;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -61,7 +119,7 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
     .decoration-circle:nth-child(1) {
       width: 600px;
       height: 600px;
-      background: linear-gradient(135deg, rgb(75, 171, 255), #1976D2);
+      background: linear-gradient(135deg, #4CAF50, #388E3C);
       top: -200px;
       right: -200px;
     }
@@ -69,12 +127,11 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
     .decoration-circle:nth-child(2) {
       width: 400px;
       height: 400px;
-      background: linear-gradient(225deg, #1976D2, rgb(75, 171, 255));
+      background: linear-gradient(225deg, #388E3C, #4CAF50);
       bottom: -150px;
       left: -150px;
     }
 
-    /* Header Premium */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -132,42 +189,24 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
     }
 
-    /* Main Content */
     main {
       flex: 1;
-      padding: 60px 40px;
-      max-width: 1200px;
+      padding: 80px 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .success-container {
+      background: white;
+      padding: 60px 50px;
+      border-radius: 35px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+      max-width: 700px;
       width: 100%;
-      margin: 0 auto;
-    }
-
-    .page-title {
       text-align: center;
-      font-size: 48px;
-      font-weight: 800;
-      margin-bottom: 50px;
-      color: #1976D2;
-      letter-spacing: -2px;
+      border: 3px solid rgba(76, 175, 80, 0.15);
       position: relative;
-      padding-bottom: 20px;
-    }
-
-    .page-title::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 150px;
-      height: 5px;
-      background: linear-gradient(90deg, transparent, rgb(75, 171, 255), #1976D2, transparent);
-      border-radius: 3px;
-    }
-
-    .payment-wrapper {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
       animation: slideUp 0.6s ease-out;
     }
 
@@ -182,205 +221,148 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       }
     }
 
-    .card {
-      background: white;
-      padding: 40px;
-      border-radius: 25px;
-      box-shadow: 0 15px 50px rgba(0,0,0,0.08);
-      border: 3px solid rgba(75, 171, 255, 0.08);
-      position: relative;
-    }
-
-    .card::before {
+    .success-container::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 6px;
-      background: linear-gradient(90deg, rgb(75, 171, 255), #1976D2);
-      border-radius: 25px 25px 0 0;
+      height: 8px;
+      background: linear-gradient(90deg, #4CAF50, #388E3C);
+      border-radius: 35px 35px 0 0;
     }
 
-    .card-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: #1976D2;
+    .success-icon {
+      font-size: 100px;
       margin-bottom: 25px;
-      letter-spacing: -1px;
+      animation: bounce 1s ease;
     }
 
-    /* Summary Card */
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px;
-      background: rgba(75, 171, 255, 0.05);
-      border-radius: 12px;
-      margin-bottom: 12px;
-      border-left: 4px solid rgb(75, 171, 255);
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
     }
 
-    .summary-item label {
-      font-weight: 700;
-      color: #1976D2;
-    }
-
-    .summary-item span {
-      font-weight: 600;
-      color: #333;
-    }
-
-    .seats-display {
-      background: linear-gradient(135deg, rgba(75, 171, 255, 0.1), rgba(25, 118, 210, 0.1));
-      padding: 20px;
-      border-radius: 15px;
-      margin: 20px 0;
-      border: 2px solid rgba(75, 171, 255, 0.2);
-    }
-
-    .seats-display strong {
-      display: block;
-      color: #1976D2;
-      font-size: 16px;
-      margin-bottom: 10px;
-      font-weight: 800;
-    }
-
-    .seat-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .seat-tag {
-      background: linear-gradient(135deg, rgb(75, 171, 255), #1976D2);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 14px;
-      box-shadow: 0 4px 12px rgba(75, 171, 255, 0.3);
-    }
-
-    .price-total {
-      background: linear-gradient(135deg, #4CAF50, #388E3C);
-      color: white;
-      padding: 25px;
-      border-radius: 15px;
-      text-align: center;
-      margin-top: 25px;
-      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-    }
-
-    .price-total .label {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      opacity: 0.95;
-    }
-
-    .price-total .amount {
+    .success-title {
       font-size: 42px;
       font-weight: 800;
+      color: #4CAF50;
+      margin-bottom: 15px;
       letter-spacing: -1px;
     }
 
-    /* Form Card */
-    .form-group {
-      margin-bottom: 25px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 10px;
-      font-weight: 700;
-      color: #1976D2;
-      font-size: 15px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 16px 20px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      background: #f8f9fa;
-      font-family: "Space Grotesk", sans-serif;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: rgb(75, 171, 255);
-      background: white;
-      box-shadow: 0 6px 20px rgba(75, 171, 255, 0.15);
-    }
-
-    .form-group input::placeholder {
-      color: #999;
+    .success-subtitle {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 40px;
       font-weight: 500;
     }
 
-    .form-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 15px;
-    }
-
-    .card-visual {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .booking-code {
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(56, 142, 60, 0.1));
       padding: 25px;
-      border-radius: 15px;
-      color: white;
-      margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-      position: relative;
-      overflow: hidden;
+      border-radius: 20px;
+      margin: 30px 0;
+      border: 2px solid rgba(76, 175, 80, 0.3);
     }
 
-    .card-visual::before {
-      content: '💳';
-      position: absolute;
-      font-size: 120px;
-      right: -20px;
-      top: -20px;
-      opacity: 0.2;
+    .booking-code-label {
+      font-size: 14px;
+      color: #388E3C;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
     }
 
-    .card-chip {
-      width: 50px;
-      height: 40px;
-      background: linear-gradient(135deg, #f4d03f, #f39c12);
-      border-radius: 8px;
+    .booking-code-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #4CAF50;
+      letter-spacing: 3px;
+      font-family: monospace;
+    }
+
+    .summary-box {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 20px;
+      margin: 30px 0;
+      text-align: left;
+      border: 2px solid rgba(75, 171, 255, 0.1);
+    }
+
+    .summary-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1976D2;
       margin-bottom: 20px;
+      text-align: center;
     }
 
-    .card-number {
-      font-size: 22px;
-      letter-spacing: 4px;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-
-    .card-info {
+    .summary-row {
       display: flex;
       justify-content: space-between;
-      font-size: 14px;
-      opacity: 0.9;
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+      align-items: center;
     }
 
-    /* Buttons */
-    .btn-container {
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      font-weight: 700;
+      color: #666;
+    }
+
+    .summary-value {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .seats-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .seat-badge {
+      background: linear-gradient(135deg, rgb(75, 171, 255), #1976D2);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .total-row {
+      background: linear-gradient(135deg, #4CAF50, #388E3C);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .total-label {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .total-amount {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .action-buttons {
       display: flex;
       gap: 15px;
-      margin-top: 30px;
+      margin-top: 40px;
     }
 
     .btn {
@@ -388,40 +370,39 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       padding: 18px;
       border: none;
       border-radius: 12px;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s ease;
       text-transform: uppercase;
       letter-spacing: 1px;
       text-decoration: none;
-      text-align: center;
       display: inline-block;
+      text-align: center;
     }
 
-    .btn-pay {
+    .btn-primary {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       color: white;
       box-shadow: 0 8px 25px rgba(75, 171, 255, 0.4);
     }
 
-    .btn-pay:hover {
+    .btn-primary:hover {
       transform: translateY(-3px);
       box-shadow: 0 12px 35px rgba(75, 171, 255, 0.6);
     }
 
-    .btn-back {
-      background: rgba(75, 171, 255, 0.1);
-      color: #1976D2;
-      border: 2px solid rgba(75, 171, 255, 0.3);
+    .btn-secondary {
+      background: rgba(76, 175, 80, 0.1);
+      color: #388E3C;
+      border: 2px solid rgba(76, 175, 80, 0.3);
     }
 
-    .btn-back:hover {
-      background: rgba(75, 171, 255, 0.15);
+    .btn-secondary:hover {
+      background: rgba(76, 175, 80, 0.15);
       transform: translateY(-3px);
     }
 
-    /* Footer */
     footer {
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
@@ -467,26 +448,34 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
         padding: 40px 20px;
       }
 
-      .page-title {
+      .success-container {
+        padding: 40px 25px;
+      }
+
+      .success-icon {
+        font-size: 70px;
+      }
+
+      .success-title {
         font-size: 32px;
-        margin-bottom: 30px;
       }
 
-      .payment-wrapper {
-        grid-template-columns: 1fr;
-        gap: 20px;
+      .booking-code-value {
+        font-size: 24px;
       }
 
-      .card {
-        padding: 30px 20px;
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-
-      .btn-container {
+      .action-buttons {
         flex-direction: column;
+      }
+
+      .summary-row {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+      }
+
+      .seats-list {
+        justify-content: flex-start;
       }
     }
   </style>
@@ -503,6 +492,7 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
     </a>
     <nav>
       <ul>
+        <li><a href="LandingPage.php">🏠 Beranda</a></li>
         <li><a href="history.php">📋 Riwayat</a></li>
         <li><a href="checkin.php">✅ Check-in</a></li>
       </ul>
@@ -510,101 +500,66 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
   </header>
 
   <main>
-    <h1 class="page-title">💳 Pembayaran</h1>
+    <div class="success-container">
+      <div class="success-icon">✅</div>
+      <h1 class="success-title">Pembayaran Berhasil!</h1>
+      <p class="success-subtitle">Terima kasih, pembayaran Anda telah diterima dan diproses.</p>
 
-    <div class="payment-wrapper">
-      <!-- Summary Card -->
-      <div class="card">
-        <h2 class="card-title">📋 Ringkasan Pemesanan</h2>
+      <div class="booking-code">
+        <div class="booking-code-label">Kode Booking</div>
+        <div class="booking-code-value"><?php echo $bookingCode; ?></div>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-title">📋 Detail Pemesanan</div>
         
-        <div class="summary-item">
-          <label>🛫 Dari:</label>
-          <span><?php echo htmlspecialchars($from); ?></span>
+        <div class="summary-row">
+          <span class="summary-label">🛫 Dari:</span>
+          <span class="summary-value"><?php echo htmlspecialchars($from); ?></span>
         </div>
 
-        <div class="summary-item">
-          <label>🛬 Ke:</label>
-          <span><?php echo htmlspecialchars($to); ?></span>
+        <div class="summary-row">
+          <span class="summary-label">🛬 Ke:</span>
+          <span class="summary-value"><?php echo htmlspecialchars($to); ?></span>
         </div>
 
-        <div class="summary-item">
-          <label>📅 Tanggal:</label>
-          <span><?php echo date('d M Y', strtotime($date)); ?></span>
+        <div class="summary-row">
+          <span class="summary-label">📅 Tanggal:</span>
+          <span class="summary-value"><?php echo date('d M Y', strtotime($date)); ?></span>
         </div>
 
-        <div class="summary-item">
-          <label>👥 Penumpang:</label>
-          <span><?php echo $passengerCount; ?> Orang</span>
+        <div class="summary-row">
+          <span class="summary-label">👥 Penumpang:</span>
+          <span class="summary-value"><?php echo $passengerCount; ?> Orang</span>
         </div>
 
-        <div class="seats-display">
-          <strong>Kursi Dipilih:</strong>
-          <div class="seat-tags">
+        <div class="summary-row">
+          <span class="summary-label">🪑 Kursi:</span>
+          <div class="seats-list">
             <?php 
-            if (!empty($seats)) {
+            if (!empty($seats) && is_array($seats) && count($seats) > 0) {
               foreach ($seats as $seat) {
-                echo "<span class='seat-tag'>" . htmlspecialchars($seat) . "</span>";
+                $seatClean = trim($seat);
+                if (!empty($seatClean)) {
+                  echo "<span class='seat-badge'>" . htmlspecialchars($seatClean) . "</span>";
+                }
               }
             } else {
-              echo "<span style='color: #999;'>Belum ada kursi dipilih</span>";
+              echo "<span class='summary-value' style='color: #dc3545;'>⚠️ Data kursi tidak ditemukan</span>";
             }
             ?>
           </div>
         </div>
 
-        <div class="price-total">
-          <div class="label">Total Pembayaran</div>
-          <div class="amount">Rp <?php echo number_format($passengerCount * 1500000, 0, ',', '.'); ?></div>
+        <div class="total-row">
+          <span class="total-label">Total Pembayaran:</span>
+          <span class="total-amount">Rp <?php echo number_format($totalPrice, 0, ',', '.'); ?></span>
         </div>
       </div>
 
-      <!-- Payment Form Card -->
-      <div class="card">
-        <h2 class="card-title">💳 Informasi Pembayaran</h2>
-
-        <div class="card-visual">
-          <div class="card-chip"></div>
-          <div class="card-number">•••• •••• •••• ••••</div>
-          <div class="card-info">
-            <span>CARD HOLDER</span>
-            <span>MM/YY</span>
-          </div>
-        </div>
-
-        <form action="payment_success.php" method="POST">
-          <input type="hidden" name="seats" value="<?php echo htmlspecialchars(implode(',', $seats)); ?>">
-          <input type="hidden" name="passenger" value="<?php echo $passengerCount; ?>">
-          <input type="hidden" name="from" value="<?php echo htmlspecialchars($from); ?>">
-          <input type="hidden" name="to" value="<?php echo htmlspecialchars($to); ?>">
-          <input type="hidden" name="date" value="<?php echo htmlspecialchars($date); ?>">
-
-          <div class="form-group">
-            <label for="nama">👤 Nama Pemilik Kartu</label>
-            <input type="text" id="nama" name="nama" placeholder="Contoh: Budi Santoso" required>
-          </div>
-
-          <div class="form-group">
-            <label for="card">💳 Nomor Kartu</label>
-            <input type="text" id="card" name="card" maxlength="19" placeholder="1234 5678 9012 3456" required>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="exp">📅 Expired</label>
-              <input type="month" id="exp" name="exp" required>
-            </div>
-
-            <div class="form-group">
-              <label for="cvv">🔒 CVV</label>
-              <input type="password" id="cvv" name="cvv" maxlength="3" placeholder="123" required>
-            </div>
-          </div>
-
-          <div class="btn-container">
-            <a href="javascript:history.back()" class="btn btn-back">← Kembali</a>
-            <button type="submit" class="btn btn-pay">💰 Bayar Sekarang</button>
-          </div>
-        </form>
+      <div class="action-buttons">
+        <a href="history.php" class="btn btn-primary">📋 Lihat Riwayat</a>
+        <a href="LandingPage.php" class="btn btn-secondary">🏠 Kembali ke Beranda</a>
       </div>
     </div>
   </main>
@@ -612,30 +567,5 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
   <footer>
     <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
   </footer>
-
-  <script>
-    // Auto-format card number
-    const cardInput = document.getElementById('card');
-    cardInput.addEventListener('input', (e) => {
-      let value = e.target.value.replace(/\s/g, '');
-      let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-      e.target.value = formattedValue;
-    });
-
-    // Card number validation
-    cardInput.addEventListener('keypress', (e) => {
-      if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {
-        e.preventDefault();
-      }
-    });
-
-    // CVV validation
-    const cvvInput = document.getElementById('cvv');
-    cvvInput.addEventListener('keypress', (e) => {
-      if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {
-        e.preventDefault();
-      }
-    });
-  </script>
 </body>
 </html>
