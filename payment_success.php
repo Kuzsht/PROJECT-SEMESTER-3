@@ -1,79 +1,74 @@
 <?php
 session_start();
+include 'connector.php';
 
-// DEBUG: Tampilkan semua data POST dan GET
-// echo "<pre style='background: yellow; padding: 20px;'>";
-// echo "=== POST DATA ===\n";
-// print_r($_POST);
-// echo "\n=== GET DATA ===\n";
-// print_r($_GET);
-// echo "</pre>";
+if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
+    header("Location: index.php");
+    exit();
+}
 
 // Ambil data dari form pembayaran
 $nama = isset($_POST['nama']) ? $_POST['nama'] : '';
 $card = isset($_POST['card']) ? $_POST['card'] : '';
 
-// Ambil data penerbangan dari POST atau GET (fallback)
-$from = isset($_POST['from']) ? $_POST['from'] : (isset($_GET['from']) ? $_GET['from'] : 'Jakarta');
-$to = isset($_POST['to']) ? $_POST['to'] : (isset($_GET['to']) ? $_GET['to'] : 'Bali');
-$date = isset($_POST['date']) ? $_POST['date'] : (isset($_GET['date']) ? $_GET['date'] : date('Y-m-d'));
-$passengerCount = isset($_POST['passenger']) ? intval($_POST['passenger']) : (isset($_GET['passenger']) ? intval($_GET['passenger']) : 1);
+// Ambil data penerbangan dari POST
+$id_tiket = isset($_POST['id_tiket']) ? intval($_POST['id_tiket']) : 0;
+$from = isset($_POST['from']) ? $_POST['from'] : '';
+$to = isset($_POST['to']) ? $_POST['to'] : '';
+$date = isset($_POST['date']) ? $_POST['date'] : date('Y-m-d');
+$passengerCount = isset($_POST['passenger']) ? intval($_POST['passenger']) : 1;
+$price = isset($_POST['price']) ? intval($_POST['price']) : 0;
 
-// PERBAIKAN PENTING: Ambil seats dari POST, jika kosong coba dari GET
-$seatsRaw = '';
-if (isset($_POST['seats']) && !empty($_POST['seats'])) {
-    $seatsRaw = $_POST['seats'];
-} else if (isset($_GET['seats']) && !empty($_GET['seats'])) {
-    $seatsRaw = $_GET['seats'];
-}
-
-// DEBUG seats
-// echo "<pre style='background: #ffcccc; padding: 20px;'>";
-// echo "Seats Raw: '" . $seatsRaw . "'\n";
-// echo "Seats Type: " . gettype($seatsRaw) . "\n";
-// echo "Seats Empty?: " . (empty($seatsRaw) ? 'YES' : 'NO') . "\n";
-// echo "Seats Length: " . strlen($seatsRaw) . "\n";
-// echo "</pre>";
+// Ambil seats dari POST
+$seatsRaw = isset($_POST['seats']) ? $_POST['seats'] : '';
 
 // Konversi seats ke array
 $seats = [];
 if (!empty($seatsRaw)) {
     if (is_string($seatsRaw)) {
-        // Jika string, pisahkan dengan koma dan bersihkan
         $seats = array_filter(array_map('trim', explode(",", $seatsRaw)));
     } else if (is_array($seatsRaw)) {
-        // Jika sudah array, bersihkan saja
         $seats = array_filter(array_map('trim', $seatsRaw));
     }
 }
 
-// DEBUG hasil konversi
-// echo "<pre style='background: #ccffcc; padding: 20px;'>";
-// echo "Seats Array: \n";
-// print_r($seats);
-// echo "Seats Count: " . count($seats) . "\n";
-// echo "</pre>";
-
-// Generate booking code
-$bookingCode = 'ATX' . strtoupper(substr(md5(time()), 0, 8));
-$totalPrice = $passengerCount * 1500000;
-
-// Simpan ke session untuk history
-if (!isset($_SESSION['bookings'])) {
-    $_SESSION['bookings'] = [];
+// Validasi data penting
+if ($id_tiket == 0 || empty($seats) || $passengerCount == 0) {
+    header("Location: search.php");
+    exit();
 }
 
-$_SESSION['bookings'][] = [
-    'booking_code' => $bookingCode,
-    'from' => $from,
-    'to' => $to,
-    'date' => $date,
-    'passenger' => $passengerCount,
-    'seats' => $seats,
-    'total' => $totalPrice,
-    'status' => 'Belum Check-in',
-    'created_at' => date('Y-m-d H:i:s')
-];
+// Generate booking code
+$bookingCode = 'ATX' . strtoupper(substr(md5(time() . rand()), 0, 8));
+$totalPrice = $passengerCount * $price;
+$id_user = $_SESSION['id_user'];
+
+// Gabungkan kursi menjadi string
+$kursi_dipilih = implode(',', $seats);
+
+// Debug untuk cek data sebelum insert
+// echo "Kursi: " . $kursi_dipilih . "<br>";
+// echo "Penumpang: " . $passengerCount . "<br>";
+// echo "Date: " . $date . "<br>";
+
+// Insert ke database
+$query = "INSERT INTO pemesanan 
+          (kode_pemesanan, tanggal_keberangkatan, kursi_dipilih, jumlah_penumpang, harga_total, checkin, id_tiket, id_user) 
+          VALUES (?, ?, ?, ?, ?, 0, ?, ?)";
+
+$stmt = mysqli_prepare($conn, $query);
+// Tipe data: s=string, i=integer, d=double
+// kode_pemesanan(s), tanggal(s), kursi(s), jumlah_penumpang(i), harga(d), id_tiket(i), id_user(i)
+mysqli_stmt_bind_param($stmt, "sssidii", $bookingCode, $date, $kursi_dipilih, $passengerCount, $totalPrice, $id_tiket, $id_user);
+
+$success = mysqli_stmt_execute($stmt);
+$id_pemesanan = mysqli_insert_id($conn);
+
+mysqli_stmt_close($stmt);
+
+if (!$success) {
+    die("Error: Gagal menyimpan pemesanan. " . mysqli_error($conn));
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -207,7 +202,13 @@ $_SESSION['bookings'][] = [
       text-align: center;
       border: 3px solid rgba(76, 175, 80, 0.15);
       position: relative;
-      animation: slideUp 0.6s ease-out;
+      transition: all 0.3s ease;
+    }
+
+    .success-container:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 60px rgba(75, 171, 255, 0.2);
+      border-color: #4CAF50;
     }
 
     @keyframes slideUp {
@@ -219,16 +220,6 @@ $_SESSION['bookings'][] = [
         opacity: 1;
         transform: translateY(0);
       }
-    }
-
-    .success-container::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 8px;
-      border-radius: 35px 35px 0 0;
     }
 
     .success-icon {
@@ -491,7 +482,6 @@ $_SESSION['bookings'][] = [
     </a>
     <nav>
       <ul>
-        <li><a href="LandingPage.php">🏠 Beranda</a></li>
         <li><a href="history.php">📋 Riwayat</a></li>
         <li><a href="checkin.php">✅ Check-in</a></li>
       </ul>

@@ -561,7 +561,7 @@ mysqli_stmt_close($stmt);
     </div>
 
     <div class="container">
-      <h2>🪑 Pilih Kursi Penumpang</h2>
+      <h2>Pilih Kursi Penumpang</h2>
       
       <div class="passenger-info">
         <p>Jumlah Penumpang: <span><?php echo $penumpang; ?></span> Orang</p>

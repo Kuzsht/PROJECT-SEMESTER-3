@@ -7,14 +7,24 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Ambil data kursi & jumlah penumpang dari seat.php
+// Ambil data dari seat.php
+$id_tiket = isset($_GET['id_tiket']) ? intval($_GET['id_tiket']) : 0;
 $seats = isset($_GET['seats']) ? explode(",", $_GET['seats']) : [];
 $passengerCount = isset($_GET['passenger']) ? intval($_GET['passenger']) : 1;
-
-// Data penerbangan dari session atau GET
-$from = isset($_GET['from']) ? $_GET['from'] : 'Jakarta';
-$to = isset($_GET['to']) ? $_GET['to'] : 'Bali';
+$from = isset($_GET['from']) ? $_GET['from'] : '';
+$to = isset($_GET['to']) ? $_GET['to'] : '';
 $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$airline = isset($_GET['airline']) ? $_GET['airline'] : '';
+$price = isset($_GET['price']) ? intval($_GET['price']) : 0;
+
+// Validasi data
+if ($id_tiket == 0 || empty($from) || empty($to) || empty($seats)) {
+    header("Location: search.php");
+    exit();
+}
+
+// Hitung total harga
+$totalPrice = $passengerCount * $price;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -42,7 +52,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       min-height: 100vh;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -74,7 +83,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       left: -150px;
     }
 
-    /* Header Premium */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -132,7 +140,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
     }
 
-    /* Main Content */
     main {
       flex: 1;
       padding: 60px 40px;
@@ -216,7 +223,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       letter-spacing: -1px;
     }
 
-    /* Summary Card */
     .summary-item {
       display: flex;
       justify-content: space-between;
@@ -293,7 +299,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       letter-spacing: -1px;
     }
 
-    /* Form Card */
     .form-group {
       margin-bottom: 25px;
     }
@@ -382,7 +387,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       opacity: 0.9;
     }
 
-    /* Buttons */
     .btn-container {
       display: flex;
       gap: 15px;
@@ -427,7 +431,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       transform: translateY(-3px);
     }
 
-    /* Footer */
     footer {
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
@@ -560,7 +563,7 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
         <div class="price-total">
           <div class="label">Total Pembayaran</div>
-          <div class="amount">Rp <?php echo number_format($passengerCount * 1500000, 0, ',', '.'); ?></div>
+          <div class="amount">Rp <?php echo number_format($totalPrice, 0, ',', '.'); ?></div>
         </div>
       </div>
 
@@ -578,11 +581,14 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
         </div>
 
         <form action="payment_success.php" method="POST">
+          <!-- Hidden fields untuk kirim data -->
+          <input type="hidden" name="id_tiket" value="<?php echo $id_tiket; ?>">
           <input type="hidden" name="seats" value="<?php echo htmlspecialchars(implode(',', $seats)); ?>">
           <input type="hidden" name="passenger" value="<?php echo $passengerCount; ?>">
           <input type="hidden" name="from" value="<?php echo htmlspecialchars($from); ?>">
           <input type="hidden" name="to" value="<?php echo htmlspecialchars($to); ?>">
           <input type="hidden" name="date" value="<?php echo htmlspecialchars($date); ?>">
+          <input type="hidden" name="price" value="<?php echo $price; ?>">
 
           <div class="form-group">
             <label for="nama">👤 Nama Pemilik Kartu</label>

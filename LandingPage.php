@@ -153,7 +153,7 @@ $username = $_SESSION['username'];
       justify-content: center;
       align-items: center;
       background: 
-        linear-gradient(135deg, rgba(75, 171, 255, 0.96), rgba(25, 118, 210, 0.96)),
+        linear-gradient(135deg, rgba(156, 206, 255, 1), rgba(154, 205, 255, 0.8)),
         url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600') no-repeat center center/cover;
       color: white;
       text-align: center;
@@ -180,42 +180,45 @@ $username = $_SESSION['username'];
     }
 
     .hero h2 {
+      color: rgba(255, 255, 255, 0.96);
       font-size: 82px;
       font-weight: 800;
       margin-bottom: 30px;
-      text-shadow: 4px 4px 15px rgba(0,0,0,0.3);
+      text-shadow: 0px 0px 10px rgba(171, 171, 171, 1);
       line-height: 1.1;
       letter-spacing: -3px;
     }
 
     .hero p {
+      color: rgba(255, 255, 255, 1);
       font-size: 28px;
       margin-bottom: 50px;
       opacity: 0.95;
       font-weight: 300;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+      text-shadow: 0px 0px 10px rgba(171, 171, 171, 1);
       line-height: 1.5;
     }
 
     .hero-btn {
       padding: 24px 70px;
-      background: white;
+      background: rgb(75, 171, 255);
       border: none;
       border-radius: 50px;
       font-size: 20px;
       font-weight: 700;
-      color: rgb(75, 171, 255);
+      color: rgba(255, 255, 255, 1);
       cursor: pointer;
       transition: all 0.4s ease;
       text-transform: uppercase;
       letter-spacing: 2px;
-      box-shadow: 0 15px 50px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0px 50px rgba(255, 255, 255, 1);
     }
 
     .hero-btn:hover {
       transform: translateY(-5px);
-      box-shadow: 0 20px 60px rgba(255, 255, 255, 0.7);
+      box-shadow: 0 20px 60px rgba(76, 166, 255, 0.96);
       background: #f8f9fa;
+      color: rgb(75, 171, 255);
     }
 
     /* Stats Premium */

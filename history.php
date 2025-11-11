@@ -2,13 +2,32 @@
 session_start();
 include 'connector.php';
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
     header("Location: index.php");
     exit();
 }
 
-// Ambil data booking dari session (dalam implementasi real, ambil dari database)
-$bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
+$id_user = $_SESSION['id_user'];
+
+// Ambil data booking dari database dengan JOIN ke tabel tiket dan maskapai
+$query = "SELECT p.*, t.asal_kota, t.tujuan_kota, m.nama_maskapai 
+          FROM pemesanan p
+          INNER JOIN tiket t ON p.id_tiket = t.id_tiket
+          INNER JOIN maskapai m ON t.id_maskapai = m.id_maskapai
+          WHERE p.id_user = ?
+          ORDER BY p.id_pemesanan DESC";
+
+$stmt = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt, "i", $id_user);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+$bookings = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    $bookings[] = $row;
+}
+
+mysqli_stmt_close($stmt);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -36,7 +55,6 @@ $bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
       min-height: 100vh;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -68,7 +86,6 @@ $bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
       left: -150px;
     }
 
-    /* Header Premium */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -126,7 +143,6 @@ $bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
       box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
     }
 
-    /* Main Content */
     main {
       flex: 1;
       padding: 60px 40px;
@@ -217,7 +233,6 @@ $bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
       box-shadow: 0 12px 35px rgba(75, 171, 255, 0.6);
     }
 
-    /* Booking Cards */
     .bookings-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -381,7 +396,6 @@ $bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
       font-weight: 800;
     }
 
-    /* Footer */
     footer {
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
@@ -476,7 +490,7 @@ $bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
     <?php if (empty($bookings)): ?>
       <!-- Empty State -->
       <div class="empty-state">
-        <div class="empty-icon">📭</div>
+        <div class="empty-icon">🔭</div>
         <h2 class="empty-title">Belum Ada Riwayat Pemesanan</h2>
         <p class="empty-text">Anda belum melakukan pemesanan tiket. Mulai perjalanan Anda sekarang!</p>
         <a href="search.php" class="btn">🚀 Pesan Tiket Sekarang</a>
@@ -484,56 +498,59 @@ $bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
     <?php else: ?>
       <!-- Booking Cards -->
       <div class="bookings-grid">
-        <?php foreach (array_reverse($bookings) as $booking): ?>
+        <?php foreach ($bookings as $booking): 
+          // Konversi kursi dari string ke array
+          $seats = !empty($booking['kursi_dipilih']) ? explode(',', $booking['kursi_dipilih']) : [];
+        ?>
           <div class="booking-card">
             <div class="booking-header">
-              <div class="booking-code"><?php echo htmlspecialchars($booking['booking_code']); ?></div>
-              <span class="booking-status <?php echo $booking['status'] === 'Sudah Check-in' ? 'status-checkedin' : 'status-pending'; ?>">
-                <?php echo htmlspecialchars($booking['status']); ?>
+              <div class="booking-code"><?php echo htmlspecialchars($booking['kode_pemesanan']); ?></div>
+              <span class="booking-status <?php echo $booking['checkin'] == 1 ? 'status-checkedin' : 'status-pending'; ?>">
+                <?php echo $booking['checkin'] == 1 ? 'Sudah Check-in' : 'Belum Check-in'; ?>
               </span>
             </div>
 
             <div class="booking-route">
               <div class="route-city">
-                <div class="route-city-name"><?php echo htmlspecialchars($booking['from']); ?></div>
+                <div class="route-city-name"><?php echo htmlspecialchars($booking['asal_kota']); ?></div>
                 <small>🛫 Keberangkatan</small>
               </div>
               <div class="route-icon">✈️</div>
               <div class="route-city">
-                <div class="route-city-name"><?php echo htmlspecialchars($booking['to']); ?></div>
+                <div class="route-city-name"><?php echo htmlspecialchars($booking['tujuan_kota']); ?></div>
                 <small>🛬 Tujuan</small>
               </div>
             </div>
 
             <div class="booking-details">
               <div class="detail-row">
+                <span class="detail-label">✈️ Maskapai</span>
+                <span class="detail-value"><?php echo htmlspecialchars($booking['nama_maskapai']); ?></span>
+              </div>
+
+              <div class="detail-row">
                 <span class="detail-label">📅 Tanggal</span>
-                <span class="detail-value"><?php echo date('d M Y', strtotime($booking['date'])); ?></span>
+                <span class="detail-value"><?php echo date('d M Y', strtotime($booking['tanggal_keberangkatan'])); ?></span>
               </div>
 
               <div class="detail-row">
                 <span class="detail-label">👥 Penumpang</span>
-                <span class="detail-value"><?php echo $booking['passenger']; ?> Orang</span>
+                <span class="detail-value"><?php echo $booking['jumlah_penumpang']; ?> Orang</span>
               </div>
 
               <div class="detail-row">
                 <span class="detail-label">🪑 Kursi</span>
                 <div class="seats-mini">
-                  <?php foreach ($booking['seats'] as $seat): ?>
-                    <span class="seat-mini"><?php echo htmlspecialchars($seat); ?></span>
+                  <?php foreach ($seats as $seat): ?>
+                    <span class="seat-mini"><?php echo htmlspecialchars(trim($seat)); ?></span>
                   <?php endforeach; ?>
                 </div>
-              </div>
-
-              <div class="detail-row">
-                <span class="detail-label">🕒 Dibuat</span>
-                <span class="detail-value"><?php echo date('d M Y H:i', strtotime($booking['created_at'])); ?></span>
               </div>
             </div>
 
             <div class="booking-total">
               <span class="total-label">Total Pembayaran:</span>
-              <span class="total-amount">Rp <?php echo number_format($booking['total'], 0, ',', '.'); ?></span>
+              <span class="total-amount">Rp <?php echo number_format($booking['harga_total'], 0, ',', '.'); ?></span>
             </div>
           </div>
         <?php endforeach; ?>

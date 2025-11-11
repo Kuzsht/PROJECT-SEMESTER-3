@@ -2,33 +2,49 @@
 session_start();
 include 'connector.php';
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
     header("Location: index.php");
     exit();
 }
 
+$id_user = $_SESSION['id_user'];
+$success = false;
+
 // Handle check-in submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_code'])) {
-    $bookingCode = $_POST['booking_code'];
-    $success = false;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pemesanan'])) {
+    $id_pemesanan = intval($_POST['id_pemesanan']);
     
-    if (isset($_SESSION['bookings'])) {
-        foreach ($_SESSION['bookings'] as &$booking) {
-            if ($booking['booking_code'] === $bookingCode) {
-                $booking['status'] = 'Sudah Check-in';
-                $success = true;
-                break;
-            }
-        }
-        unset($booking);
+    // Update checkin status di database
+    $updateQuery = "UPDATE pemesanan SET checkin = 1 WHERE id_pemesanan = ? AND id_user = ?";
+    $stmt = mysqli_prepare($conn, $updateQuery);
+    mysqli_stmt_bind_param($stmt, "ii", $id_pemesanan, $id_user);
+    
+    if (mysqli_stmt_execute($stmt)) {
+        $success = true;
     }
+    
+    mysqli_stmt_close($stmt);
 }
 
-// Ambil data booking dari session
-$bookings = isset($_SESSION['bookings']) ? $_SESSION['bookings'] : [];
-$pendingBookings = array_filter($bookings, function($b) {
-    return $b['status'] === 'Belum Check-in';
-});
+// Ambil data booking yang belum check-in dari database
+$query = "SELECT p.*, t.asal_kota, t.tujuan_kota, m.nama_maskapai 
+          FROM pemesanan p
+          INNER JOIN tiket t ON p.id_tiket = t.id_tiket
+          INNER JOIN maskapai m ON t.id_maskapai = m.id_maskapai
+          WHERE p.id_user = ? AND p.checkin = 0
+          ORDER BY p.tanggal_keberangkatan ASC, p.id_pemesanan DESC";
+
+$stmt = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt, "i", $id_user);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+$pendingBookings = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    $pendingBookings[] = $row;
+}
+
+mysqli_stmt_close($stmt);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -56,7 +72,6 @@ $pendingBookings = array_filter($bookings, function($b) {
       min-height: 100vh;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -88,7 +103,6 @@ $pendingBookings = array_filter($bookings, function($b) {
       left: -150px;
     }
 
-    /* Header Premium */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -146,7 +160,6 @@ $pendingBookings = array_filter($bookings, function($b) {
       box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
     }
 
-    /* Main Content */
     main {
       flex: 1;
       padding: 60px 40px;
@@ -178,7 +191,6 @@ $pendingBookings = array_filter($bookings, function($b) {
       border-radius: 3px;
     }
 
-    /* Success Alert */
     .success-alert {
       background: linear-gradient(135deg, #4CAF50, #388E3C);
       color: white;
@@ -222,7 +234,6 @@ $pendingBookings = array_filter($bookings, function($b) {
       opacity: 0.95;
     }
 
-    /* Empty State */
     .empty-state {
       text-align: center;
       padding: 80px 40px;
@@ -285,7 +296,6 @@ $pendingBookings = array_filter($bookings, function($b) {
       box-shadow: 0 12px 35px rgba(75, 171, 255, 0.6);
     }
 
-    /* Check-in Cards */
     .checkin-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
@@ -437,7 +447,6 @@ $pendingBookings = array_filter($bookings, function($b) {
       box-shadow: 0 12px 35px rgba(76, 175, 80, 0.6);
     }
 
-    /* Footer */
     footer {
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
@@ -534,7 +543,7 @@ $pendingBookings = array_filter($bookings, function($b) {
   <main>
     <h1 class="page-title">✅ Check-in Online</h1>
 
-    <?php if (isset($success) && $success): ?>
+    <?php if ($success): ?>
       <div class="success-alert">
         <div class="icon">✅</div>
         <div class="text">
@@ -555,52 +564,60 @@ $pendingBookings = array_filter($bookings, function($b) {
     <?php else: ?>
       <!-- Check-in Cards -->
       <div class="checkin-grid">
-        <?php foreach (array_reverse($pendingBookings) as $booking): ?>
+        <?php foreach ($pendingBookings as $booking): 
+          // Konversi kursi dari string ke array
+          $seats = !empty($booking['kursi_dipilih']) ? explode(',', $booking['kursi_dipilih']) : [];
+        ?>
           <div class="checkin-card">
             <div class="card-header">
-              <div class="booking-code-display"><?php echo htmlspecialchars($booking['booking_code']); ?></div>
+              <div class="booking-code-display"><?php echo htmlspecialchars($booking['kode_pemesanan']); ?></div>
             </div>
 
             <div class="route-display">
               <div class="city-display">
-                <div class="city-name"><?php echo htmlspecialchars($booking['from']); ?></div>
+                <div class="city-name"><?php echo htmlspecialchars($booking['asal_kota']); ?></div>
                 <div class="city-label">🛫 Keberangkatan</div>
               </div>
               <div class="plane-icon">✈️</div>
               <div class="city-display">
-                <div class="city-name"><?php echo htmlspecialchars($booking['to']); ?></div>
+                <div class="city-name"><?php echo htmlspecialchars($booking['tujuan_kota']); ?></div>
                 <div class="city-label">🛬 Tujuan</div>
               </div>
             </div>
 
             <div class="flight-details">
               <div class="detail-item">
+                <span class="detail-label">✈️ Maskapai</span>
+                <span class="detail-value"><?php echo htmlspecialchars($booking['nama_maskapai']); ?></span>
+              </div>
+
+              <div class="detail-item">
                 <span class="detail-label">📅 Tanggal Keberangkatan</span>
-                <span class="detail-value"><?php echo date('d M Y', strtotime($booking['date'])); ?></span>
+                <span class="detail-value"><?php echo date('d M Y', strtotime($booking['tanggal_keberangkatan'])); ?></span>
               </div>
 
               <div class="detail-item">
                 <span class="detail-label">👥 Jumlah Penumpang</span>
-                <span class="detail-value"><?php echo $booking['passenger']; ?> Orang</span>
+                <span class="detail-value"><?php echo $booking['jumlah_penumpang']; ?> Orang</span>
               </div>
 
               <div class="detail-item">
                 <span class="detail-label">🪑 Kursi</span>
                 <div class="seats-display-mini">
-                  <?php foreach ($booking['seats'] as $seat): ?>
-                    <span class="seat-badge-mini"><?php echo htmlspecialchars($seat); ?></span>
+                  <?php foreach ($seats as $seat): ?>
+                    <span class="seat-badge-mini"><?php echo htmlspecialchars(trim($seat)); ?></span>
                   <?php endforeach; ?>
                 </div>
               </div>
 
               <div class="detail-item">
                 <span class="detail-label">💰 Total Pembayaran</span>
-                <span class="detail-value">Rp <?php echo number_format($booking['total'], 0, ',', '.'); ?></span>
+                <span class="detail-value">Rp <?php echo number_format($booking['harga_total'], 0, ',', '.'); ?></span>
               </div>
             </div>
 
             <form method="POST" class="checkin-form">
-              <input type="hidden" name="booking_code" value="<?php echo htmlspecialchars($booking['booking_code']); ?>">
+              <input type="hidden" name="id_pemesanan" value="<?php echo $booking['id_pemesanan']; ?>">
               <button type="submit" class="checkin-btn">✅ Check-in Sekarang</button>
             </form>
           </div>

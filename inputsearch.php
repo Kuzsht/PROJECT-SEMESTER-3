@@ -431,7 +431,6 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
     </a>
     <nav>
       <ul>
-        <li><a href="LandingPage.php">🏠 Beranda</a></li>
         <li><a href="history.php">📋 Riwayat</a></li>
         <li><a href="checkin.php">✅ Check-in</a></li>
       </ul>
@@ -440,7 +439,7 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
 
   <main>
     <div class="container">
-      <h1 class="page-title">📝 Detail Pemesanan</h1>
+      <h1 class="page-title">Detail Pemesanan</h1>
       <p class="subtitle">Lengkapi informasi penerbangan Anda</p>
 
       <div class="flight-summary">

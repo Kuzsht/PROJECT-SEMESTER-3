@@ -429,7 +429,7 @@ $result = mysqli_query($conn, $query);
       <a href="LandingPage.php" class="back-btn">← Kembali ke Beranda</a>
     </div>
 
-    <h1 class="page-title">✈️ Pilih Penerbangan</h1>
+    <h1 class="page-title">Pilih Penerbangan</h1>
 
     <?php if (mysqli_num_rows($result) > 0): ?>
       <div class="flights-grid">
