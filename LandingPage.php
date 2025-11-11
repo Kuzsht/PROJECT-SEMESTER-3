@@ -184,7 +184,7 @@ $username = $_SESSION['username'];
       font-size: 82px;
       font-weight: 800;
       margin-bottom: 30px;
-      text-shadow: 0px 0px 10px rgba(171, 171, 171, 1);
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
       line-height: 1.1;
       letter-spacing: -3px;
     }
@@ -195,7 +195,7 @@ $username = $_SESSION['username'];
       margin-bottom: 50px;
       opacity: 0.95;
       font-weight: 300;
-      text-shadow: 0px 0px 10px rgba(171, 171, 171, 1);
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
       line-height: 1.5;
     }
 
