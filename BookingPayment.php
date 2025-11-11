@@ -189,6 +189,13 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       box-shadow: 0 15px 50px rgba(0,0,0,0.08);
       border: 3px solid rgba(75, 171, 255, 0.08);
       position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 60px rgba(75, 171, 255, 0.2);
+      border-color: rgb(75, 171, 255);
     }
 
     .card::before {
@@ -198,7 +205,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
       left: 0;
       right: 0;
       height: 6px;
-      background: linear-gradient(90deg, rgb(75, 171, 255), #1976D2);
       border-radius: 25px 25px 0 0;
     }
 

@@ -7,10 +7,37 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
+// Ambil data dari inputsearch.php
+$id_tiket = isset($_GET['id_tiket']) ? intval($_GET['id_tiket']) : 0;
 $penumpang = isset($_GET['penumpang']) ? (int)$_GET['penumpang'] : 1;
 $from = isset($_GET['from']) ? $_GET['from'] : '';
 $to = isset($_GET['to']) ? $_GET['to'] : '';
 $date = isset($_GET['date']) ? $_GET['date'] : '';
+$airline = isset($_GET['airline']) ? $_GET['airline'] : '';
+$price = isset($_GET['price']) ? intval($_GET['price']) : 0;
+
+// Validasi data
+if ($id_tiket == 0 || empty($from) || empty($to)) {
+    header("Location: search.php");
+    exit();
+}
+
+// Ambil kursi yang sudah dipesan untuk tiket dan tanggal ini
+$bookedSeats = [];
+$queryBooked = "SELECT kursi_dipilih FROM pemesanan 
+                WHERE id_tiket = ? AND tanggal_keberangkatan = ?";
+$stmt = mysqli_prepare($conn, $queryBooked);
+mysqli_stmt_bind_param($stmt, "is", $id_tiket, $date);
+mysqli_stmt_execute($stmt);
+$resultBooked = mysqli_stmt_get_result($stmt);
+
+while ($row = mysqli_fetch_assoc($resultBooked)) {
+    if (!empty($row['kursi_dipilih'])) {
+        $seats = explode(',', $row['kursi_dipilih']);
+        $bookedSeats = array_merge($bookedSeats, $seats);
+    }
+}
+mysqli_stmt_close($stmt);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -38,7 +65,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       min-height: 100vh;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -70,7 +96,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       left: -150px;
     }
 
-    /* Navbar Clean Premium - SAMA DENGAN LANDING PAGE */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -128,7 +153,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
     }
 
-    /* Main Content */
     main {
       flex: 1;
       padding: 60px 40px;
@@ -173,7 +197,13 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       width: 100%;
       position: relative;
       border: 3px solid rgba(75, 171, 255, 0.08);
-      animation: slideUp 0.6s ease-out;
+      transition: all 0.3s ease;
+    }
+
+    .container:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 25px 60px rgba(75, 171, 255, 0.2);
+          border-color: rgb(75, 171, 255);
     }
 
     @keyframes slideUp {
@@ -242,7 +272,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       color: rgb(75, 171, 255);
     }
 
-    /* Airplane Layout */
     .airplane-container {
       background: linear-gradient(180deg, #e3f2fd 0%, #ffffff 100%);
       padding: 40px 30px;
@@ -308,7 +337,7 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
 
-    .seat:hover {
+    .seat:hover:not(.booked) {
       transform: translateY(-5px) scale(1.05);
       box-shadow: 0 8px 20px rgba(75, 171, 255, 0.3);
       border-color: rgb(75, 171, 255);
@@ -339,7 +368,21 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       box-shadow: 0 2px 8px rgba(76, 175, 80, 0.5);
     }
 
-    /* Legend */
+    .seat.booked {
+      background: linear-gradient(135deg, #e57373, #d32f2f);
+      color: white;
+      border-color: #c62828;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .seat.booked::before {
+      content: '✗';
+      position: absolute;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
     .legend {
       display: flex;
       justify-content: center;
@@ -373,7 +416,11 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       border-color: #1976D2;
     }
 
-    /* Submit Button */
+    .legend-box.booked-demo {
+      background: linear-gradient(135deg, #e57373, #d32f2f);
+      border-color: #c62828;
+    }
+
     .submit-btn {
       width: 100%;
       padding: 22px;
@@ -391,22 +438,18 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       margin-top: 15px;
     }
 
-    .submit-btn:hover {
+    .submit-btn:hover:not(:disabled) {
       transform: translateY(-4px);
       box-shadow: 0 15px 45px rgba(75, 171, 255, 0.6);
-    }
-
-    .submit-btn:active {
-      transform: translateY(-2px);
     }
 
     .submit-btn:disabled {
       background: #ccc;
       cursor: not-allowed;
       box-shadow: none;
+      opacity: 0.5;
     }
 
-    /* Selection Counter */
     .selection-counter {
       text-align: center;
       margin-top: 25px;
@@ -428,7 +471,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
       color: #4CAF50;
     }
 
-    /* Footer - SAMA DENGAN LANDING PAGE */
     footer {
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
@@ -480,19 +522,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
 
       h2 {
         font-size: 28px;
-        margin-bottom: 15px;
-      }
-
-      .passenger-info {
-        padding: 15px;
-      }
-
-      .passenger-info p {
-        font-size: 16px;
-      }
-
-      .passenger-info span {
-        font-size: 24px;
       }
 
       .seats {
@@ -504,19 +533,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
         width: 60px;
         height: 60px;
         font-size: 14px;
-      }
-
-      .legend {
-        gap: 15px;
-      }
-
-      .legend-item {
-        font-size: 13px;
-      }
-
-      .submit-btn {
-        padding: 18px;
-        font-size: 16px;
       }
     }
   </style>
@@ -541,22 +557,26 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
 
   <main>
     <div class="back-wrapper">
-      <a href="search.php" class="back-btn">← Kembali ke Pencarian</a>
+      <a href="javascript:history.back()" class="back-btn">← Kembali</a>
     </div>
 
     <div class="container">
-      <h2>Pilih Kursi Penumpang</h2>
+      <h2>🪑 Pilih Kursi Penumpang</h2>
       
       <div class="passenger-info">
         <p>Jumlah Penumpang: <span><?php echo $penumpang; ?></span> Orang</p>
       </div>
 
       <form id="seatForm" method="get" action="BookingPayment.php">
-        <!-- Hidden fields untuk data penerbangan -->
+        <!-- Hidden fields -->
+        <input type="hidden" name="id_tiket" value="<?php echo $id_tiket; ?>">
         <input type="hidden" name="from" value="<?php echo htmlspecialchars($from); ?>">
         <input type="hidden" name="to" value="<?php echo htmlspecialchars($to); ?>">
         <input type="hidden" name="date" value="<?php echo htmlspecialchars($date); ?>">
+        <input type="hidden" name="airline" value="<?php echo htmlspecialchars($airline); ?>">
+        <input type="hidden" name="price" value="<?php echo $price; ?>">
         <input type="hidden" name="passenger" value="<?php echo $penumpang; ?>">
+        <input type="hidden" name="seats" id="selectedSeats" value="">
         
         <div class="airplane-container">
           <div class="cockpit">
@@ -564,8 +584,16 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
           </div>
           
           <div class="seats">
-            <?php for ($i = 1; $i <= 20; $i++): ?>
-              <div class="seat" data-seat="K<?php echo $i; ?>">K<?php echo $i; ?></div>
+            <?php 
+            for ($i = 1; $i <= 20; $i++): 
+              $seatNumber = "K" . $i;
+              $isBooked = in_array($seatNumber, $bookedSeats);
+            ?>
+              <div class="seat <?php echo $isBooked ? 'booked' : ''; ?>" 
+                   data-seat="<?php echo $seatNumber; ?>"
+                   <?php echo $isBooked ? 'data-booked="true"' : ''; ?>>
+                <?php echo $seatNumber; ?>
+              </div>
             <?php endfor; ?>
           </div>
         </div>
@@ -579,14 +607,17 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
             <div class="legend-box selected-demo"></div>
             <span>Dipilih</span>
           </div>
+          <div class="legend-item">
+            <div class="legend-box booked-demo"></div>
+            <span>Terpesan</span>
+          </div>
         </div>
 
         <div class="selection-counter">
           <p>Kursi Terpilih: <span id="counterDisplay">0</span> / <?php echo $penumpang; ?></p>
         </div>
 
-        <input type="hidden" name="seats" id="selectedSeats">
-        <button type="submit" class="submit-btn" id="submitBtn">🚀 Lanjutkan ke Pembayaran</button>
+        <button type="submit" class="submit-btn" id="submitBtn" disabled>🚀 Lanjutkan ke Pembayaran</button>
       </form>
     </div>
   </main>
@@ -618,6 +649,14 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
     }
 
     seats.forEach(seat => {
+      // Skip kursi yang sudah dipesan
+      if (seat.dataset.booked === 'true') {
+        seat.addEventListener('click', () => {
+          alert('⚠️ Kursi ini sudah dipesan oleh penumpang lain!');
+        });
+        return;
+      }
+
       seat.addEventListener('click', () => {
         const seatNumber = seat.dataset.seat;
 
@@ -629,7 +668,6 @@ $date = isset($_GET['date']) ? $_GET['date'] : '';
             seat.classList.add('selected');
             selected.push(seatNumber);
           } else {
-            // Visual feedback
             seat.style.animation = 'shake 0.5s';
             setTimeout(() => {
               seat.style.animation = '';

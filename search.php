@@ -1,16 +1,25 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $penumpang = $_POST['penumpang'];
-  header("Location: seat.php?penumpang=$penumpang");
-  exit;
+session_start();
+include 'connector.php';
+
+if (!isset($_SESSION['username'])) {
+    header("Location: index.php");
+    exit();
 }
+
+// Ambil semua tiket dari database dengan JOIN ke tabel maskapai
+$query = "SELECT t.*, m.nama_maskapai, m.harga_satukursi 
+          FROM tiket t 
+          INNER JOIN maskapai m ON t.id_maskapai = m.id_maskapai 
+          ORDER BY t.asal_kota, t.tujuan_kota";
+$result = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cari Penerbangan - AIRtix.id</title>
+  <title>Pilih Penerbangan - AIRtix.id</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -31,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       min-height: 100vh;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -63,7 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       left: -150px;
     }
 
-    /* Navbar Clean Premium - SAMA DENGAN LANDING PAGE */
     header {
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       padding: 20px 50px;
@@ -121,24 +128,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
     }
 
-    /* Main Content */
     main {
       flex: 1;
-      padding: 80px 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 60px 40px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
     }
 
-    .search-container {
-      background: white;
-      padding: 60px 50px;
-      border-radius: 35px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-      max-width: 600px;
-      width: 100%;
+    .page-title {
+      text-align: center;
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 50px;
+      color: #1976D2;
+      letter-spacing: -2px;
       position: relative;
-      border: 3px solid rgba(75, 171, 255, 0.08);
+      padding-bottom: 20px;
+    }
+
+    .page-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 5px;
+      background: linear-gradient(90deg, transparent, rgb(75, 171, 255), #1976D2, transparent);
+      border-radius: 3px;
+    }
+
+    .flights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 30px;
       animation: slideUp 0.6s ease-out;
     }
 
@@ -153,118 +177,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     }
 
-    .search-container::before {
+    .flight-card {
+      background: white;
+      border-radius: 25px;
+      padding: 30px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.08);
+      border: 3px solid rgba(75, 171, 255, 0.08);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .flight-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 60px rgba(75, 171, 255, 0.2);
+      border-color: rgb(75, 171, 255);
+    }
+
+    .flight-card::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 8px;
-      border-radius: 35px 35px 0 0;
+      height: 6px;
+      border-radius: 25px 25px 0 0;
     }
 
-    .search-container h2 {
-      margin-bottom: 40px;
-      color: #1976D2;
-      font-size: 42px;
+    .airline-name {
+      font-size: 24px;
       font-weight: 800;
-      text-align: center;
-      letter-spacing: -1px;
-      position: relative;
-      padding-bottom: 20px;
-    }
-
-    .search-container h2::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100px;
-      height: 4px;
-      background: linear-gradient(90deg, transparent, rgb(75, 171, 255), #1976D2, transparent);
-      border-radius: 2px;
-    }
-
-    .form-group {
-      margin-bottom: 28px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 10px;
-      font-weight: 700;
       color: #1976D2;
-      font-size: 16px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    input, select {
-      width: 100%;
-      padding: 18px 20px;
-      border: 2px solid #e0e0e0;
-      border-radius: 15px;
-      font-size: 16px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      background: #f8f9fa;
-      color: #1a1a1a;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      border-color: rgb(75, 171, 255);
-      background: white;
-      box-shadow: 0 8px 25px rgba(75, 171, 255, 0.15);
-      transform: translateY(-2px);
-    }
-
-    input::placeholder {
-      color: #999;
-      font-weight: 500;
-    }
-
-    select {
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234BABFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 15px center;
-      background-size: 20px;
-      padding-right: 45px;
-    }
-
-    button {
-      width: 100%;
+    .route-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 25px 0;
       padding: 20px;
+      background: linear-gradient(135deg, rgba(75, 171, 255, 0.05), rgba(25, 118, 210, 0.05));
+      border-radius: 15px;
+    }
+
+    .city {
+      flex: 1;
+      text-align: center;
+    }
+
+    .city-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1976D2;
+      margin-bottom: 5px;
+    }
+
+    .city-label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .plane-icon {
+      font-size: 28px;
+      margin: 0 15px;
+    }
+
+    .price-section {
+      background: linear-gradient(135deg, #4CAF50, #388E3C);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .price-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+
+    .price-amount {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .select-btn {
+      width: 100%;
+      padding: 16px;
       background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
       color: white;
       border: none;
-      border-radius: 15px;
-      font-size: 18px;
+      border-radius: 12px;
+      font-size: 16px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.4s ease;
+      transition: all 0.3s ease;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      box-shadow: 0 10px 35px rgba(75, 171, 255, 0.4);
-      margin-top: 15px;
+      letter-spacing: 1px;
+      box-shadow: 0 8px 25px rgba(75, 171, 255, 0.4);
     }
 
-    button:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 15px 45px rgba(75, 171, 255, 0.6);
+    .select-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(75, 171, 255, 0.6);
     }
 
-    button:active {
-      transform: translateY(-2px);
+    .back-wrapper {
+      max-width: 1400px;
+      width: 100%;
+      margin-bottom: 25px;
     }
 
     .back-btn {
       display: inline-block;
-      margin-top: 25px;
-      padding: 16px 35px;
+      padding: 14px 30px;
       background: rgba(75, 171, 255, 0.1);
       color: #1976D2;
       text-decoration: none;
@@ -272,9 +304,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-weight: 700;
       transition: all 0.3s ease;
       border: 2px solid rgba(75, 171, 255, 0.2);
-      text-align: center;
-      display: block;
       letter-spacing: 1px;
+      font-size: 15px;
     }
 
     .back-btn:hover {
@@ -284,7 +315,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow: 0 8px 20px rgba(75, 171, 255, 0.2);
     }
 
-    /* Footer - SAMA DENGAN LANDING PAGE */
+    .empty-state {
+      text-align: center;
+      padding: 80px 40px;
+      background: white;
+      border-radius: 25px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.08);
+      border: 3px solid rgba(75, 171, 255, 0.08);
+    }
+
+    .empty-icon {
+      font-size: 100px;
+      margin-bottom: 25px;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
     footer {
       background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       color: #ccc;
@@ -309,31 +361,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-weight: 600;
     }
 
-    /* Icon Enhancement */
-    .form-group {
-      position: relative;
-    }
-
-    .icon-wrapper {
-      position: relative;
-    }
-
-    .icon-wrapper::before {
-      content: attr(data-icon);
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 20px;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .icon-wrapper input,
-    .icon-wrapper select {
-      padding-left: 55px;
-    }
-
     @media (max-width: 968px) {
       header {
         flex-direction: column;
@@ -355,27 +382,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         padding: 40px 20px;
       }
 
-      .search-container {
-        padding: 40px 30px;
-      }
-
-      .search-container h2 {
+      .page-title {
         font-size: 32px;
         margin-bottom: 30px;
       }
 
-      label {
-        font-size: 14px;
+      .flights-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
       }
 
-      input, select {
-        padding: 16px 18px;
-        font-size: 15px;
+      .flight-card {
+        padding: 25px 20px;
       }
 
-      button {
-        padding: 18px;
-        font-size: 16px;
+      .airline-name {
+        font-size: 20px;
+      }
+
+      .city-name {
+        font-size: 18px;
       }
     }
   </style>
@@ -399,46 +425,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </header>
 
   <main>
-    <div class="search-container">
-      <h2>🔍 Cari Penerbangan</h2>
-      <form method="get" action="seat.php">
-        <div class="form-group">
-          <label for="from">🛫 Dari</label>
-          <div class="icon-wrapper" data-icon="📍">
-            <input type="text" id="from" name="from" placeholder="Masukkan Kota Asal" required>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="to">🛬 Ke</label>
-          <div class="icon-wrapper" data-icon="📍">
-            <input type="text" id="to" name="to" placeholder="Masukkan Kota Tujuan" required>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="date">📅 Tanggal Keberangkatan</label>
-          <div class="icon-wrapper" data-icon="📆">
-            <input type="date" id="date" name="date" required>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="penumpang">👥 Jumlah Penumpang</label>
-          <div class="icon-wrapper" data-icon="👤">
-            <select id="penumpang" name="penumpang" required>
-              <option value="1">1 Penumpang</option>
-              <option value="2">2 Penumpang</option>
-              <option value="3">3 Penumpang</option>
-              <option value="4">4 Penumpang</option>
-            </select>
-          </div>
-        </div>
-
-        <button type="submit">🚀 Cari Penerbangan</button>
-      </form>
+    <div class="back-wrapper">
       <a href="LandingPage.php" class="back-btn">← Kembali ke Beranda</a>
     </div>
+
+    <h1 class="page-title">✈️ Pilih Penerbangan</h1>
+
+    <?php if (mysqli_num_rows($result) > 0): ?>
+      <div class="flights-grid">
+        <?php while ($ticket = mysqli_fetch_assoc($result)): ?>
+          <div class="flight-card">
+            <div class="airline-name">
+              ✈️ <?php echo htmlspecialchars($ticket['nama_maskapai']); ?>
+            </div>
+
+            <div class="route-display">
+              <div class="city">
+                <div class="city-name"><?php echo htmlspecialchars($ticket['asal_kota']); ?></div>
+                <div class="city-label">🛫 Keberangkatan</div>
+              </div>
+              <div class="plane-icon">→</div>
+              <div class="city">
+                <div class="city-name"><?php echo htmlspecialchars($ticket['tujuan_kota']); ?></div>
+                <div class="city-label">🛬 Tujuan</div>
+              </div>
+            </div>
+
+            <div class="price-section">
+              <div class="price-label">Harga per Kursi</div>
+              <div class="price-amount">Rp <?php echo number_format($ticket['harga_satukursi'], 0, ',', '.'); ?></div>
+            </div>
+
+            <form action="inputsearch.php" method="get">
+              <input type="hidden" name="id_tiket" value="<?php echo $ticket['id_tiket']; ?>">
+              <input type="hidden" name="from" value="<?php echo htmlspecialchars($ticket['asal_kota']); ?>">
+              <input type="hidden" name="to" value="<?php echo htmlspecialchars($ticket['tujuan_kota']); ?>">
+              <input type="hidden" name="airline" value="<?php echo htmlspecialchars($ticket['nama_maskapai']); ?>">
+              <input type="hidden" name="price" value="<?php echo $ticket['harga_satukursi']; ?>">
+              <button type="submit" class="select-btn">🎫 Pilih Penerbangan</button>
+            </form>
+          </div>
+        <?php endwhile; ?>
+      </div>
+    <?php else: ?>
+      <div class="empty-state">
+        <div class="empty-icon">✈️</div>
+        <h2 class="empty-title">Tidak Ada Penerbangan Tersedia</h2>
+        <p style="color: #999; margin-bottom: 25px;">Belum ada tiket penerbangan yang terdaftar di sistem.</p>
+      </div>
+    <?php endif; ?>
   </main>
 
   <footer>
