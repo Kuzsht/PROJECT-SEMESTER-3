@@ -13,22 +13,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email_user = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    $query = "SELECT * FROM user WHERE email_user='$email_user' AND password='$password'";
-    $result = mysqli_query($conn, $query);
+    // prepared statement
+    $query = "SELECT * FROM user WHERE email_user = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "s", $email_user);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
     if (mysqli_num_rows($result) == 1) {
         $row = mysqli_fetch_assoc($result);
+        
+        // password_verify untuk password yang di-hash
+        if (password_verify($password, $row['password'])) {
+            // Password benar, buat session
+            $_SESSION['id_user'] = $row['id_user'];
+            $_SESSION['username'] = $row['username'];
+            $_SESSION['name'] = $row['name'];
+            $_SESSION['email_user'] = $row['email_user'];
 
-        $_SESSION['id_user'] = $row['id_user'];
-        $_SESSION['username'] = $row['username'];
-        $_SESSION['name'] = $row['name'];
-        $_SESSION['email_user'] = $row['email_user'];
+            // Regenerate session ID untuk keamanan
+            session_regenerate_id(true);
 
-        header("Location: LandingPage.php");
-        exit();
+            mysqli_stmt_close($stmt);
+            header("Location: LandingPage.php");
+            exit();
+        } else {
+            $message = "Email atau password tidak valid";
+        }
     } else {
-        $message = "email atau password tidak ditemukan";
+        $message = "Email atau password tidak valid";
     }
+    
+    mysqli_stmt_close($stmt);
 }
 ?>
 
@@ -331,8 +347,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="signin-subtitle">Selamat datang kembali!<br>Masuk untuk melanjutkan perjalanan Anda</p>
                 
                 <?php if ($message): ?>
-                    <p style="color:red;"><?= $message ?></p>
-                    <br>
+                    <p class="error-message"><?= htmlspecialchars($message) ?></p>
                 <?php endif; ?>
 
                 <form method="POST" action="">

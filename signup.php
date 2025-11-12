@@ -15,18 +15,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $checkUser = mysqli_query($conn, "SELECT * FROM user WHERE username='$username' OR email_user='$email_user'");
-    if (mysqli_num_rows($checkUser) > 0) {
-        $message = "username sudah ada, gunakan username lainnya";
+    // Cek apakah username atau email sudah ada menggunakan prepared statement
+    $checkQuery = "SELECT id_user FROM user WHERE username = ? OR email_user = ?";
+    $checkStmt = mysqli_prepare($conn, $checkQuery);
+    mysqli_stmt_bind_param($checkStmt, "ss", $username, $email_user);
+    mysqli_stmt_execute($checkStmt);
+    mysqli_stmt_store_result($checkStmt);
+    
+    if (mysqli_stmt_num_rows($checkStmt) > 0) {
+        $message = "Username atau email sudah digunakan, gunakan yang lain";
+        mysqli_stmt_close($checkStmt);
     } else {
-        $insert = mysqli_query($conn, "INSERT INTO user (email_user, username, name, password) 
-                                       VALUES ('$email_user', '$username', '$name', '$password')");
-        if ($insert) {
+        mysqli_stmt_close($checkStmt);
+        
+        // Hash password
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        
+        // Insert user baru dengan prepared statement
+        $insertQuery = "INSERT INTO user (email_user, username, name, password) VALUES (?, ?, ?, ?)";
+        $insertStmt = mysqli_prepare($conn, $insertQuery);
+        mysqli_stmt_bind_param($insertStmt, "ssss", $email_user, $username, $name, $hashedPassword);
+        
+        if (mysqli_stmt_execute($insertStmt)) {
             $message = "Registrasi berhasil! Silakan login.";
+            mysqli_stmt_close($insertStmt);
             header("refresh:2; url=index.php");
             exit();
         } else {
-            $message = "Terjadi kesalahan saat registrasi: " . mysqli_error($conn);
+            $message = "Terjadi kesalahan saat registrasi";
+            mysqli_stmt_close($insertStmt);
         }
     }
 }
@@ -337,10 +354,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="signup-subtitle">Daftarkan diri Anda untuk memulai perjalanan bersama AIRtix.id</p>
 
                 <?php if ($message): ?>
-                    <p style="color:<?= strpos($message, 'berhasil') !== false ? 'green' : 'red'; ?>;">
-                        <?= $message ?>
+                    <p class="<?= strpos($message, 'berhasil') !== false ? 'success-message' : 'error-message' ?> message">
+                        <?= htmlspecialchars($message) ?>
                     </p>
-                    <br>
                 <?php endif; ?>
 
                 <form method="POST" action="">

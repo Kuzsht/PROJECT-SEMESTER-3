@@ -9,8 +9,12 @@ if (!isset($_SESSION['email_user'])) {
 
 $email = $_SESSION['email_user'];
 
-$sql = "SELECT username, name, email_user, photo FROM user WHERE email_user = '$email'";
-$result = mysqli_query($conn, $sql);
+// prepared statement untuk query user
+$sql = "SELECT username, name, email_user, photo FROM user WHERE email_user = ?";
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param($stmt, "s", $email);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 
 if ($result && mysqli_num_rows($result) > 0) {
     $user = mysqli_fetch_assoc($result);
@@ -23,6 +27,8 @@ if ($result && mysqli_num_rows($result) > 0) {
     $name = $_SESSION['name'] ?? 'User Name';
     $photo = '';
 }
+
+mysqli_stmt_close($stmt);
 
 function safe_name($str) {
     return preg_replace('/[^A-Za-z0-9]/', '_', $str);
@@ -65,8 +71,13 @@ if (isset($_POST['upload']) || isset($_POST['edit'])) {
                     }
 
                     $photoPathDB = "uploads/" . $newFileName;
-                    $updateQuery = "UPDATE user SET photo = '$photoPathDB' WHERE email_user = '$email'";
-                    mysqli_query($conn, $updateQuery);
+                    
+                    // prepared statement untuk update
+                    $updateQuery = "UPDATE user SET photo = ? WHERE email_user = ?";
+                    $updateStmt = mysqli_prepare($conn, $updateQuery);
+                    mysqli_stmt_bind_param($updateStmt, "ss", $photoPathDB, $email);
+                    mysqli_stmt_execute($updateStmt);
+                    mysqli_stmt_close($updateStmt);
 
                     $message = "Foto profil berhasil diunggah!";
                     $messageType = "success";
@@ -91,8 +102,13 @@ if (isset($_POST['delete'])) {
     if (!empty($photo) && file_exists($photo)) {
         unlink($photo);
     }
-    $updateQuery = "UPDATE user SET photo = NULL WHERE email_user = '$email'";
-    mysqli_query($conn, $updateQuery);
+    
+    // prepared statement untuk update
+    $updateQuery = "UPDATE user SET photo = NULL WHERE email_user = ?";
+    $updateStmt = mysqli_prepare($conn, $updateQuery);
+    mysqli_stmt_bind_param($updateStmt, "s", $email);
+    mysqli_stmt_execute($updateStmt);
+    mysqli_stmt_close($updateStmt);
     
     $photo = '';
     $message = "Foto profil berhasil dihapus.";
@@ -100,7 +116,7 @@ if (isset($_POST['delete'])) {
     $hasPhoto = false;
 }
 
-// Dapatkan URL foto profil (real atau default)
+// URL foto profil (real atau default)
 $profilePhotoURL = getProfilePhoto($photo);
 ?>
 
@@ -128,7 +144,6 @@ $profilePhotoURL = getProfilePhoto($photo);
       overflow-x: hidden;
     }
 
-    /* Subtle Background */
     .bg-decorations {
       position: fixed;
       width: 100%;
@@ -238,7 +253,6 @@ $profilePhotoURL = getProfilePhoto($photo);
       color: rgba(255, 0, 0, 0.5);
     }
 
-    /* Main Content */
     main {
       padding: 80px 40px 140px;
       max-width: 1400px;
@@ -300,7 +314,6 @@ $profilePhotoURL = getProfilePhoto($photo);
       margin: auto;
     }
 
-    /* Photo Section Card */
     .photo-card {
       background: white;
       border-radius: 35px;
@@ -428,7 +441,6 @@ $profilePhotoURL = getProfilePhoto($photo);
       display: none;
     }
 
-    /* Info Section */
     .info-section {
       display: flex;
       flex-direction: column;
@@ -620,7 +632,6 @@ $profilePhotoURL = getProfilePhoto($photo);
     <?php endif; ?>
 
     <div class="profile-container">
-      <!-- Photo Section -->
       <div class="photo-card">
         <div class="photo-wrapper">
           <img src="<?php echo htmlspecialchars($profilePhotoURL); ?>" alt="Foto Profil" class="photo-preview">
@@ -660,7 +671,6 @@ $profilePhotoURL = getProfilePhoto($photo);
         </div>
       </div>
 
-      <!-- Info Section -->
       <div class="info-section">
         <div class="info-card">
           <div class="info-icon">👤</div>
