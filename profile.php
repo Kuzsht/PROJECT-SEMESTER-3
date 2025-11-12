@@ -28,12 +28,10 @@ function safe_name($str) {
     return preg_replace('/[^A-Za-z0-9]/', '_', $str);
 }
 
-// Fungsi untuk mendapatkan foto profil (default jika kosong)
 function getProfilePhoto($photo) {
     if (!empty($photo) && file_exists($photo)) {
         return $photo;
     }
-    // Gunakan avatar default dari UI Avatars
     return "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['name'] ?? 'User') . "&size=500&background=4BABFF&color=fff&bold=true&font-size=0.4";
 }
 
@@ -52,8 +50,7 @@ if (isset($_POST['upload']) || isset($_POST['edit'])) {
         $fileType = $_FILES['photo']['type'];
 
         if (in_array($fileType, $allowedTypes)) {
-            // Validasi ukuran file (max 5MB)
-            $maxSize = 5 * 1024 * 1024; // 5MB
+            $maxSize = 5 * 1024 * 1024;
             if ($_FILES['photo']['size'] > $maxSize) {
                 $message = "Ukuran file terlalu besar. Maksimal 5MB.";
                 $messageType = "error";
@@ -63,7 +60,6 @@ if (isset($_POST['upload']) || isset($_POST['edit'])) {
                 $newFilePath = $uploadDir . $newFileName;
 
                 if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFilePath)) {
-                    // Hapus foto lama jika ada
                     if (!empty($photo) && file_exists($photo)) {
                         unlink($photo);
                     }
