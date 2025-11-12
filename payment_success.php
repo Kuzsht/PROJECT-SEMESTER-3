@@ -46,11 +46,6 @@ $id_user = $_SESSION['id_user'];
 // Gabungkan kursi menjadi string
 $kursi_dipilih = implode(',', $seats);
 
-// Debug untuk cek data sebelum insert
-// echo "Kursi: " . $kursi_dipilih . "<br>";
-// echo "Penumpang: " . $passengerCount . "<br>";
-// echo "Date: " . $date . "<br>";
-
 // Insert ke database
 $query = "INSERT INTO pemesanan 
           (kode_pemesanan, tanggal_keberangkatan, kursi_dipilih, jumlah_penumpang, harga_total, checkin, id_tiket, id_user) 
