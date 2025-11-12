@@ -28,6 +28,15 @@ function safe_name($str) {
     return preg_replace('/[^A-Za-z0-9]/', '_', $str);
 }
 
+// Fungsi untuk mendapatkan foto profil (default jika kosong)
+function getProfilePhoto($photo) {
+    if (!empty($photo) && file_exists($photo)) {
+        return $photo;
+    }
+    // Gunakan avatar default dari UI Avatars
+    return "https://ui-avatars.com/api/?name=" . urlencode($_SESSION['name'] ?? 'User') . "&size=500&background=4BABFF&color=fff&bold=true&font-size=0.4";
+}
+
 $uploadDir = __DIR__ . "/uploads/";
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
@@ -35,7 +44,7 @@ if (!is_dir($uploadDir)) {
 
 $message = "";
 $messageType = "";
-$hasPhoto = !empty($photo);
+$hasPhoto = !empty($photo) && file_exists($photo);
 
 if (isset($_POST['upload']) || isset($_POST['edit'])) {
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
@@ -43,22 +52,34 @@ if (isset($_POST['upload']) || isset($_POST['edit'])) {
         $fileType = $_FILES['photo']['type'];
 
         if (in_array($fileType, $allowedTypes)) {
-            $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-            $newFileName = safe_name($email) . "." . $ext;
-            $newFilePath = $uploadDir . $newFileName;
-
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFilePath)) {
-                $photoPathDB = "uploads/" . $newFileName;
-                $updateQuery = "UPDATE user SET photo = '$photoPathDB' WHERE email_user = '$email'";
-                mysqli_query($conn, $updateQuery);
-
-                $message = "Foto profil berhasil diunggah!";
-                $messageType = "success";
-                $photo = $photoPathDB;
-                $hasPhoto = true;
-            } else {
-                $message = "Gagal memindahkan file upload.";
+            // Validasi ukuran file (max 5MB)
+            $maxSize = 5 * 1024 * 1024; // 5MB
+            if ($_FILES['photo']['size'] > $maxSize) {
+                $message = "Ukuran file terlalu besar. Maksimal 5MB.";
                 $messageType = "error";
+            } else {
+                $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+                $newFileName = safe_name($email) . "_" . time() . "." . $ext;
+                $newFilePath = $uploadDir . $newFileName;
+
+                if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFilePath)) {
+                    // Hapus foto lama jika ada
+                    if (!empty($photo) && file_exists($photo)) {
+                        unlink($photo);
+                    }
+
+                    $photoPathDB = "uploads/" . $newFileName;
+                    $updateQuery = "UPDATE user SET photo = '$photoPathDB' WHERE email_user = '$email'";
+                    mysqli_query($conn, $updateQuery);
+
+                    $message = "Foto profil berhasil diunggah!";
+                    $messageType = "success";
+                    $photo = $photoPathDB;
+                    $hasPhoto = true;
+                } else {
+                    $message = "Gagal memindahkan file upload.";
+                    $messageType = "error";
+                }
             }
         } else {
             $message = "Format file tidak didukung. Hanya JPG, PNG, dan GIF yang diizinkan.";
@@ -71,16 +92,20 @@ if (isset($_POST['upload']) || isset($_POST['edit'])) {
 }
 
 if (isset($_POST['delete'])) {
-    $updateQuery = "UPDATE user SET photo = NULL WHERE email_user = '$email'";
-    mysqli_query($conn, $updateQuery);
-    if (file_exists($photo)) {
+    if (!empty($photo) && file_exists($photo)) {
         unlink($photo);
     }
+    $updateQuery = "UPDATE user SET photo = NULL WHERE email_user = '$email'";
+    mysqli_query($conn, $updateQuery);
+    
     $photo = '';
     $message = "Foto profil berhasil dihapus.";
     $messageType = "success";
     $hasPhoto = false;
 }
+
+// Dapatkan URL foto profil (real atau default)
+$profilePhotoURL = getProfilePhoto($photo);
 ?>
 
 <!DOCTYPE html>
@@ -289,6 +314,7 @@ if (isset($_POST['delete'])) {
       transition: all 0.5s ease;
       border: 3px solid rgba(75, 171, 255, 0.08);
       height: fit-content;
+      position: relative;
     }
 
     .photo-card::before {
@@ -327,6 +353,21 @@ if (isset($_POST['delete'])) {
       transform: scale(1.05);
       box-shadow: 0 20px 60px rgba(75, 171, 255, 0.5);
       border-color: rgba(75, 171, 255, 0.3);
+    }
+
+    .default-photo-badge {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, #FFA726, #FB8C00);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(255, 167, 38, 0.4);
     }
 
     .photo-buttons {
@@ -586,7 +627,10 @@ if (isset($_POST['delete'])) {
       <!-- Photo Section -->
       <div class="photo-card">
         <div class="photo-wrapper">
-          <img src="<?php echo htmlspecialchars($photo); ?>" alt="Foto Profil" class="photo-preview">
+          <img src="<?php echo htmlspecialchars($profilePhotoURL); ?>" alt="Foto Profil" class="photo-preview">
+          <?php if (!$hasPhoto): ?>
+            <span class="default-photo-badge">Default</span>
+          <?php endif; ?>
         </div>
         
         <div class="photo-buttons">
