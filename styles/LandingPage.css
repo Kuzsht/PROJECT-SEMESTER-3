@@ -43,86 +43,6 @@
       left: -150px;
     }
 
-    /* Navbar Clean Premium */
-    header {
-      background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
-      padding: 20px 50px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.3);
-    }
-
-    .logo-link {
-      text-decoration: none;
-      color: white;
-      transition: opacity 0.3s ease;
-      cursor: pointer;
-    }
-
-    .logo-link:hover {
-      opacity: 0.85;
-    }
-
-    .logo-link h1 {
-      font-size: 36px;
-      font-weight: 800;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-      letter-spacing: -1px;
-    }
-
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    nav a, .username-btn {
-      color: white;
-      text-decoration: none;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      padding: 12px 22px;
-      border-radius: 15px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      cursor: pointer;
-      display: inline-block;
-    }
-
-    nav a:hover, .username-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
-    }
-
-    .username-btn {
-      font-weight: 700;
-      padding: 12px 26px;
-      background: rgba(255,255,255,0.25);
-      border: 2px solid rgba(255,255,255,0.3);
-    }
-
-    .logout-btn {
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      padding: 12px 26px;
-      border-radius: 25px;
-      border: 2px solid rgba(255,255,255,0.2);
-      box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
-    }
-
-    .logout-btn:hover {
-      box-shadow: 0 8px 30px rgba(255, 0, 0, 1);
-      background: white;
-      color:rgba(255, 0, 0, 0.5)
-    }
-
     /* Hero Premium */
     .hero {
       min-height: 90vh;
@@ -394,31 +314,6 @@
       box-shadow: 0 15px 45px rgba(75, 171, 255, 0.6);
     }
 
-    /* Footer */
-    footer {
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      color: #ccc;
-      text-align: center;
-      padding: 45px 20px;
-      margin-top: 0;
-      font-size: 16px;
-      position: relative;
-    }
-
-    footer::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, rgb(75, 171, 255), transparent);
-    }
-
-    footer p {
-      font-weight: 600;
-    }
-
     /* Tablet Breakpoint */
     @media (max-width: 1024px) {
       .hero h2 {
@@ -441,9 +336,13 @@
 
       .features {
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 35px;
+        gap: 63px;
         padding: 0 30px 100px;
       }
+
+      .feature-card {
+      width: 470px;
+    }
 
       .stats-container {
         grid-template-columns: repeat(2, 1fr);
@@ -461,30 +360,6 @@
 
     /* Mobile Large Breakpoint */
     @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-        gap: 18px;
-        padding: 20px;
-      }
-
-      .logo-link h1 {
-        font-size: 30px;
-      }
-
-      nav ul {
-        justify-content: center;
-        gap: 8px;
-      }
-
-      nav a, .username-btn {
-        padding: 10px 18px;
-        font-size: 14px;
-      }
-
-      .logout-btn {
-        padding: 10px 20px;
-      }
-
       .hero {
         min-height: 70vh;
         padding: 40px 20px;
@@ -579,33 +454,10 @@
         font-size: 14px;
         letter-spacing: 1px;
       }
-
-      footer {
-        padding: 35px 20px;
-        font-size: 14px;
-      }
     }
 
     /* Mobile Small Breakpoint */
     @media (max-width: 480px) {
-      .logo-link h1 {
-        font-size: 24px;
-      }
-
-      nav ul {
-        gap: 6px;
-      }
-
-      nav a, .username-btn {
-        padding: 8px 14px;
-        font-size: 12px;
-        border-radius: 12px;
-      }
-
-      .logout-btn {
-        padding: 8px 16px;
-      }
-
       .hero h2 {
         font-size: 36px;
       }

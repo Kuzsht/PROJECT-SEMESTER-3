@@ -2,6 +2,8 @@
 session_start();
 include 'connector.php';
 
+$username = $_SESSION['username'];
+
 if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
     header("Location: index.php");
     exit();
@@ -76,6 +78,7 @@ if (!$success) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/payment_success.css">
+  <link rel="stylesheet" href="styles/headerfooter.css">
 </head>
 <body>
   <div class="bg-decorations">
@@ -89,8 +92,10 @@ if (!$success) {
     </a>
     <nav>
       <ul>
+        <li><a href="profile.php" class="username-btn">👋 <?php echo htmlspecialchars($username); ?></a></li>
         <li><a href="history.php">📋 Riwayat</a></li>
         <li><a href="checkin.php">✅ Check-in</a></li>
+        <li><a class="logout-btn" href="logout.php">Logout</a></li>
       </ul>
     </nav>
   </header>

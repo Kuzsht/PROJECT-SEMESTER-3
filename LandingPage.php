@@ -20,6 +20,8 @@ $username = $_SESSION['username'];
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/LandingPage.css">
+  <link rel="stylesheet" href="styles/headerfooter.css">
+  <link rel="stylesheet" href="styles/headerfooter.css">
 </head>
 <body>
   <div class="bg-decorations">

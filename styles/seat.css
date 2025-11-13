@@ -51,64 +51,6 @@ body {
   left: -150px;
 }
 
-/* Header */
-header {
-  background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
-  padding: 20px 50px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.3);
-}
-
-.logo-link {
-  text-decoration: none;
-  color: white;
-  transition: opacity 0.3s ease;
-  cursor: pointer;
-}
-
-.logo-link:hover {
-  opacity: 0.85;
-}
-
-.logo-link h1 {
-  font-size: 36px;
-  font-weight: 800;
-  text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-  letter-spacing: -1px;
-}
-
-nav ul {
-  list-style: none;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  padding: 12px 22px;
-  border-radius: 15px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  cursor: pointer;
-  display: inline-block;
-}
-
-nav a:hover {
-  background: rgba(255,255,255,0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
-}
-
 /* Main Content */
 main {
   flex: 1;
@@ -429,31 +371,6 @@ h2::after {
   opacity: 0.5;
 }
 
-/* Footer */
-footer {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  color: #ccc;
-  text-align: center;
-  padding: 45px;
-  margin-top: 0;
-  font-size: 16px;
-  position: relative;
-}
-
-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, rgb(75, 171, 255), transparent);
-}
-
-footer p {
-  font-weight: 600;
-}
-
 /* Animation */
 @keyframes slideUp {
   from {
@@ -484,14 +401,6 @@ footer p {
 
 /* Tablet & Small Desktop (768px - 968px) */
 @media (max-width: 968px) and (min-width: 768px) {
-  header {
-    padding: 20px 30px;
-  }
-
-  .logo-link h1 {
-    font-size: 32px;
-  }
-
   main {
     padding: 50px 30px;
   }
@@ -538,27 +447,6 @@ footer p {
 
 /* Mobile Landscape & Small Tablets (481px - 767px) */
 @media (max-width: 767px) and (min-width: 481px) {
-  header {
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-  }
-
-  .logo-link h1 {
-    font-size: 28px;
-  }
-
-  nav ul {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  nav a {
-    padding: 10px 18px;
-    font-size: 14px;
-  }
-
   main {
     padding: 40px 20px;
   }
@@ -643,28 +531,6 @@ footer p {
 
 /* Mobile Portrait (320px - 480px) */
 @media (max-width: 480px) {
-  header {
-    flex-direction: column;
-    gap: 12px;
-    padding: 15px;
-  }
-
-  .logo-link h1 {
-    font-size: 24px;
-  }
-
-  nav ul {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  nav a {
-    padding: 8px 14px;
-    font-size: 13px;
-    border-radius: 10px;
-  }
-
   main {
     padding: 30px 12px;
   }
@@ -785,19 +651,10 @@ footer p {
     letter-spacing: 1px;
     margin-top: 12px;
   }
-
-  footer {
-    padding: 30px 20px;
-    font-size: 14px;
-  }
 }
 
 /* Extra Small Mobile (< 320px) */
 @media (max-width: 319px) {
-  .logo-link h1 {
-    font-size: 20px;
-  }
-
   h2 {
     font-size: 22px;
   }
