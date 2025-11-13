@@ -77,6 +77,33 @@
       border-radius: 3px;
     }
 
+    .back-wrapper {
+      max-width: 1400px;
+      width: 100%;
+      margin-bottom: 25px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      padding: 14px 30px;
+      background: rgba(75, 171, 255, 0.1);
+      color: #1976D2;
+      text-decoration: none;
+      border-radius: 15px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      border: 2px solid rgba(75, 171, 255, 0.2);
+      letter-spacing: 1px;
+      font-size: 15px;
+    }
+
+    .back-btn:hover {
+      background: rgba(75, 171, 255, 0.15);
+      border-color: rgb(75, 171, 255);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(75, 171, 255, 0.2);
+    }
+
     .empty-state {
       text-align: center;
       padding: 80px 40px;

@@ -9,7 +9,7 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Ambil data dari seat.php
+// Jupuk data seat.php
 $id_tiket = isset($_GET['id_tiket']) ? intval($_GET['id_tiket']) : 0;
 $seats = isset($_GET['seats']) ? explode(",", $_GET['seats']) : [];
 $passengerCount = isset($_GET['passenger']) ? intval($_GET['passenger']) : 1;
@@ -25,7 +25,7 @@ if ($id_tiket == 0 || empty($from) || empty($to) || empty($seats)) {
     exit();
 }
 
-// Hitung total harga
+// Itung total rego
 $totalPrice = $passengerCount * $price;
 ?>
 
@@ -169,7 +169,7 @@ $totalPrice = $passengerCount * $price;
   </footer>
 
   <script>
-    // Auto-format card number
+    // Gawe format card number
     const cardInput = document.getElementById('card');
     cardInput.addEventListener('input', (e) => {
       let value = e.target.value.replace(/\s/g, '');
@@ -177,14 +177,14 @@ $totalPrice = $passengerCount * $price;
       e.target.value = formattedValue;
     });
 
-    // Card number validation
+    // Validasi anu
     cardInput.addEventListener('keypress', (e) => {
       if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {
         e.preventDefault();
       }
     });
 
-    // CVV validation
+    // Validasi cvv
     const cvvInput = document.getElementById('cvv');
     cvvInput.addEventListener('keypress', (e) => {
       if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {

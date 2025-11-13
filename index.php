@@ -13,7 +13,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email_user = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    // prepared statement
     $query = "SELECT * FROM user WHERE email_user = ?";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "s", $email_user);
@@ -23,15 +22,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (mysqli_num_rows($result) == 1) {
         $row = mysqli_fetch_assoc($result);
         
-        // password_verify untuk password yang di-hash
         if (password_verify($password, $row['password'])) {
-            // Password benar, buat session
             $_SESSION['id_user'] = $row['id_user'];
             $_SESSION['username'] = $row['username'];
             $_SESSION['name'] = $row['name'];
             $_SESSION['email_user'] = $row['email_user'];
 
-            // Regenerate session ID untuk keamanan
+            // Ncegah fixation 
             session_regenerate_id(true);
 
             mysqli_stmt_close($stmt);

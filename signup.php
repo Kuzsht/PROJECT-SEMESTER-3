@@ -15,35 +15,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    // Cek apakah username atau email sudah ada menggunakan prepared statement
-    $checkQuery = "SELECT id_user FROM user WHERE username = ? OR email_user = ?";
-    $checkStmt = mysqli_prepare($conn, $checkQuery);
-    mysqli_stmt_bind_param($checkStmt, "ss", $username, $email_user);
-    mysqli_stmt_execute($checkStmt);
-    mysqli_stmt_store_result($checkStmt);
-    
-    if (mysqli_stmt_num_rows($checkStmt) > 0) {
-        $message = "Username atau email sudah digunakan, gunakan yang lain";
-        mysqli_stmt_close($checkStmt);
+    // Validasi server-side
+    $errors = [];
+
+    if (empty($name)) {
+        $errors[] = "Nama lengkap harus diisi";
+    }
+
+    if (empty($username)) {
+        $errors[] = "Username harus diisi";
+    } elseif (strlen($username) < 3) {
+        $errors[] = "Username minimal 3 karakter";
+    }
+
+    if (empty($email_user)) {
+        $errors[] = "Email harus diisi";
+    } elseif (!filter_var($email_user, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Format email tidak valid";
+    }
+
+    if (empty($password)) {
+        $errors[] = "Password harus diisi";
+    } elseif (strlen($password) < 8) {
+        $errors[] = "Password minimal 8 karakter";
+    }
+
+    if (!empty($errors)) {
+        $message = implode("<br>", $errors);
     } else {
-        mysqli_stmt_close($checkStmt);
+        $checkQuery = "SELECT id_user FROM user WHERE username = ? OR email_user = ?";
+        $checkStmt = mysqli_prepare($conn, $checkQuery);
+        mysqli_stmt_bind_param($checkStmt, "ss", $username, $email_user);
+        mysqli_stmt_execute($checkStmt);
+        mysqli_stmt_store_result($checkStmt);
         
-        // Hash password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        
-        // Insert user baru dengan prepared statement
-        $insertQuery = "INSERT INTO user (email_user, username, name, password) VALUES (?, ?, ?, ?)";
-        $insertStmt = mysqli_prepare($conn, $insertQuery);
-        mysqli_stmt_bind_param($insertStmt, "ssss", $email_user, $username, $name, $hashedPassword);
-        
-        if (mysqli_stmt_execute($insertStmt)) {
-            $message = "Registrasi berhasil! Silakan login.";
-            mysqli_stmt_close($insertStmt);
-            header("refresh:2; url=index.php");
-            exit();
+        if (mysqli_stmt_num_rows($checkStmt) > 0) {
+            $message = "Username atau email sudah digunakan, gunakan yang lain";
+            mysqli_stmt_close($checkStmt);
         } else {
-            $message = "Terjadi kesalahan saat registrasi";
-            mysqli_stmt_close($insertStmt);
+            mysqli_stmt_close($checkStmt);
+            
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $insertQuery = "INSERT INTO user (email_user, username, name, password) VALUES (?, ?, ?, ?)";
+            $insertStmt = mysqli_prepare($conn, $insertQuery);
+            mysqli_stmt_bind_param($insertStmt, "ssss", $email_user, $username, $name, $hashedPassword);
+            
+            if (mysqli_stmt_execute($insertStmt)) {
+                $message = "✅ Registrasi berhasil! Silakan login.";
+                mysqli_stmt_close($insertStmt);
+                header("refresh:2; url=index.php");
+                exit();
+            } else {
+                $message = "Terjadi kesalahan saat registrasi";
+                mysqli_stmt_close($insertStmt);
+            }
         }
     }
 }
@@ -79,27 +104,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="signup-subtitle">Daftarkan diri Anda untuk memulai perjalanan bersama AIRtix.id</p>
 
                 <?php if ($message): ?>
-                    <p class="<?= strpos($message, 'berhasil') !== false ? 'success-message' : 'error-message' ?> message">
-                        <?= htmlspecialchars($message) ?>
+                    <p class="<?= strpos($message, 'berhasil') !== false || strpos($message, '✅') !== false ? 'success-message' : 'error-message' ?> message">
+                        <?= $message ?>
                     </p>
                 <?php endif; ?>
 
                 <form method="POST" action="">
                     <div class="form-group">
-                        <label class="form-label" for="name">NAMA LENGKAP</label>
-                        <input type="text" id="name" name="name" class="form-input" required>
+                        <label class="form-label" for="name">NAMA LENGKAP <span style="color: #e74c3c;">*</span></label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            class="form-input" 
+                            placeholder="Contoh: John Doe"
+                            required 
+                            minlength="3"
+                            value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>"
+                        >
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="username">USERNAME</label>
-                        <input type="text" id="username" name="username" class="form-input" required>
+                        <label class="form-label" for="username">USERNAME <span style="color: #e74c3c;">*</span></label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="form-input" 
+                            placeholder="Contoh: johndoe123"
+                            required 
+                            minlength="3"
+                            pattern="[A-Za-z0-9_]+"
+                            title="Hanya huruf, angka, dan underscore"
+                            value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
+                        >
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="email">EMAIL</label>
-                        <input type="email" id="email" name="email" class="form-input" required>
+                        <label class="form-label" for="email">EMAIL <span style="color: #e74c3c;">*</span></label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form-input" 
+                            placeholder="Contoh: john@example.com"
+                            required
+                            value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                        >
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="password">PASSWORD</label>
-                        <input type="password" id="password" name="password" class="form-input" required>
+                        <label class="form-label" for="password">PASSWORD <span style="color: #e74c3c;">*</span></label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Minimal 8 karakter"
+                            required 
+                            minlength="8"
+                        >
                     </div>
                     <button type="submit" class="signup-button">DAFTAR</button>
                 </form>

@@ -208,7 +208,6 @@ mysqli_stmt_close($stmt);
       }
     });
 
-    // Initial state
     updateCounter();
   </script>
 

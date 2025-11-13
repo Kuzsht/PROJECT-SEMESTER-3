@@ -154,6 +154,10 @@ $profilePhotoURL = getProfilePhoto($photo);
   </header>
 
   <main>
+    <div class="back-wrapper">
+      <a href="LandingPage.php" class="back-btn">← Kembali ke Beranda</a>
+    </div>
+    
     <div class="profile-header">
       <h2 class="section-title" data-text="PROFIL">Profil Pengguna</h2>
       <p class="profile-subtitle">Kelola informasi akun dan foto profil Anda dengan mudah</p>

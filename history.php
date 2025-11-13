@@ -10,7 +10,7 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
 $username = $_SESSION['username'];
 $id_user = $_SESSION['id_user'];
 
-// Ambil data booking dari database dengan JOIN ke tabel tiket dan maskapai
+// query ne cak
 $query = "SELECT p.*, t.asal_kota, t.tujuan_kota, m.nama_maskapai 
           FROM pemesanan p
           INNER JOIN tiket t ON p.id_tiket = t.id_tiket
@@ -64,6 +64,11 @@ mysqli_stmt_close($stmt);
   </header>
 
   <main>
+
+    <div class="back-wrapper">
+      <a href="LandingPage.php" class="back-btn">← Kembali ke Beranda</a>
+    </div>
+
     <h1 class="page-title">📋 Riwayat Pemesanan</h1>
 
     <?php if (empty($bookings)): ?>
@@ -75,10 +80,10 @@ mysqli_stmt_close($stmt);
         <a href="search.php" class="btn">🚀 Pesan Tiket Sekarang</a>
       </div>
     <?php else: ?>
-      <!-- Booking Cards -->
       <div class="bookings-grid">
         <?php foreach ($bookings as $booking): 
-          // Konversi kursi dari string ke array
+
+          // string ng array
           $seats = !empty($booking['kursi_dipilih']) ? explode(',', $booking['kursi_dipilih']) : [];
         ?>
           <div class="booking-card">

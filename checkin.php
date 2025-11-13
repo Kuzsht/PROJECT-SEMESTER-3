@@ -82,6 +82,10 @@ mysqli_stmt_close($stmt);
   </header>
 
   <main>
+    <div class="back-wrapper">
+      <a href="LandingPage.php" class="back-btn">← Kembali ke Beranda</a>
+    </div>
+
     <h1 class="page-title">✅ Check-in Online</h1>
 
     <?php if ($success): ?>
@@ -172,7 +176,6 @@ mysqli_stmt_close($stmt);
   </footer>
 
   <script>
-    // Auto-hide success alert after 5 seconds
     const successAlert = document.querySelector('.success-alert');
     if (successAlert) {
       setTimeout(() => {
@@ -185,7 +188,6 @@ mysqli_stmt_close($stmt);
       }, 5000);
     }
 
-    // Confirm before check-in
     document.querySelectorAll('.checkin-form').forEach(form => {
       form.addEventListener('submit', (e) => {
         if (!confirm('Apakah Anda yakin ingin melakukan check-in?')) {
