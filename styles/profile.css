@@ -49,6 +49,12 @@
       margin: auto;
     }
 
+    .back-wrapper {
+      max-width: 1400px;
+      width: 100%;
+      margin-bottom: 25px;
+    }
+
     .back-btn {
       display: inline-block;
       padding: 14px 30px;
@@ -61,6 +67,13 @@
       border: 2px solid rgba(75, 171, 255, 0.2);
       letter-spacing: 1px;
       font-size: 15px;
+    }
+
+    .back-btn:hover {
+      background: rgba(75, 171, 255, 0.15);
+      border-color: rgb(75, 171, 255);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(75, 171, 255, 0.2);
     }
 
     .profile-header {
