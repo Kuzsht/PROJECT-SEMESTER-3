@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'connector.php';
+include 'headerFooter.php';
 
 if (!isset($_SESSION['username'])) {
     header("Location: index.php");
@@ -52,27 +53,11 @@ mysqli_stmt_close($stmt);
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/seat.css">
-  <link rel="stylesheet" href="styles/headerfooter.css">
+  <link rel="stylesheet" href="styles/headerFooter.css">
 </head>
 <body>
-  <div class="bg-decorations">
-    <div class="decoration-circle"></div>
-    <div class="decoration-circle"></div>
-  </div>
-
-  <header>
-    <a href="LandingPage.php" class="logo-link">
-      <h1>✈️ AIRtix.id</h1>
-    </a>
-    <nav>
-      <ul>
-        <li><a href="profile.php" class="username-btn">👋 <?php echo htmlspecialchars($username); ?></a></li>
-        <li><a href="history.php">📋 Riwayat</a></li>
-        <li><a href="checkin.php">✅ Check-in</a></li>
-        <li><a class="logout-btn" href="logout.php">Logout</a></li>
-      </ul>
-    </nav>
-  </header>
+  <?php renderBackgroundDecorations(); ?>
+  <?php renderHeader($username); ?>
 
   <main>
     <div class="back-wrapper">
@@ -86,7 +71,7 @@ mysqli_stmt_close($stmt);
         <p>Jumlah Penumpang: <span><?php echo $penumpang; ?></span> Orang</p>
       </div>
 
-      <form id="seatForm" method="get" action="BookingPayment.php">
+      <form id="seatForm" method="get" action="bookingPayment.php">
         <!-- Hidden fields -->
         <input type="hidden" name="id_tiket" value="<?php echo $id_tiket; ?>">
         <input type="hidden" name="from" value="<?php echo htmlspecialchars($from); ?>">
@@ -141,9 +126,7 @@ mysqli_stmt_close($stmt);
     </div>
   </main>
 
-  <footer>
-    <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
-  </footer>
+  <?php renderFooter(); ?>
 
   <script>
     const seats = document.querySelectorAll('.seat');
@@ -168,7 +151,7 @@ mysqli_stmt_close($stmt);
     }
 
     seats.forEach(seat => {
-      // Skip kursi yang sudah dipesan
+      // Skip kursi sg wes dipesan
       if (seat.dataset.booked === 'true') {
         seat.addEventListener('click', () => {
           alert('⚠️ Kursi ini sudah dipesan oleh penumpang lain!');

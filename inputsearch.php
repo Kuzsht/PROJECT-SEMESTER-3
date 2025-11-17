@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'connector.php';
+include 'headerFooter.php';
 
 $username = $_SESSION['username'];
 
@@ -9,14 +10,12 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Ambil data tiket dari parameter GET
 $id_tiket = isset($_GET['id_tiket']) ? intval($_GET['id_tiket']) : 0;
 $from = isset($_GET['from']) ? $_GET['from'] : '';
 $to = isset($_GET['to']) ? $_GET['to'] : '';
 $airline = isset($_GET['airline']) ? $_GET['airline'] : '';
 $price = isset($_GET['price']) ? intval($_GET['price']) : 0;
 
-// Validasi data
 if ($id_tiket == 0 || empty($from) || empty($to)) {
     header("Location: search.php");
     exit();
@@ -32,28 +31,12 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/inputsearch.css">
-  <link rel="stylesheet" href="styles/headerfooter.css">
+  <link rel="stylesheet" href="styles/inputSearch.css">
+  <link rel="stylesheet" href="styles/headerFooter.css">
 </head>
 <body>
-  <div class="bg-decorations">
-    <div class="decoration-circle"></div>
-    <div class="decoration-circle"></div>
-  </div>
-
-  <header>
-    <a href="LandingPage.php" class="logo-link">
-      <h1>✈️ AIRtix.id</h1>
-    </a>
-    <nav>
-      <ul>
-        <li><a href="profile.php" class="username-btn">👋 <?php echo htmlspecialchars($username); ?></a></li>
-        <li><a href="history.php">📋 Riwayat</a></li>
-        <li><a href="checkin.php">✅ Check-in</a></li>
-        <li><a class="logout-btn" href="logout.php">Logout</a></li>
-      </ul>
-    </nav>
-  </header>
+  <?php renderBackgroundDecorations(); ?>
+  <?php renderHeader($username); ?>
 
   <main>
     <div class="container">
@@ -114,16 +97,13 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
     </div>
   </main>
 
-  <footer>
-    <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
-  </footer>
+  <?php renderFooter(); ?>
 
   <script>
     const pricePerSeat = <?php echo $price; ?>;
     const penumpangSelect = document.getElementById('penumpang');
     const totalPriceDisplay = document.getElementById('totalPrice');
 
-    // Update total price when passenger count changes
     penumpangSelect.addEventListener('change', function() {
       const passengerCount = parseInt(this.value) || 0;
       const totalPrice = pricePerSeat * passengerCount;
@@ -131,7 +111,7 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
       totalPriceDisplay.textContent = 'Rp ' + totalPrice.toLocaleString('id-ID');
     });
 
-    // Set minimum date to today
+    // Set tgl minim hari ini
     document.getElementById('date').min = new Date().toISOString().split('T')[0];
   </script>
 </body>

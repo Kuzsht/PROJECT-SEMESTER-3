@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'connector.php';
+include 'headerFooter.php';
 
 $username = $_SESSION['username'];
 
@@ -12,11 +13,8 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
 $id_user = $_SESSION['id_user'];
 $success = false;
 
-// Handle check-in submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pemesanan'])) {
     $id_pemesanan = intval($_POST['id_pemesanan']);
-    
-    // Update checkin status di database
     $updateQuery = "UPDATE pemesanan SET checkin = 1 WHERE id_pemesanan = ? AND id_user = ?";
     $stmt = mysqli_prepare($conn, $updateQuery);
     mysqli_stmt_bind_param($stmt, "ii", $id_pemesanan, $id_user);
@@ -28,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pemesanan'])) {
     mysqli_stmt_close($stmt);
 }
 
-// Ambil data booking yang belum check-in dari database
 $query = "SELECT p.*, t.asal_kota, t.tujuan_kota, m.nama_maskapai 
           FROM pemesanan p
           INNER JOIN tiket t ON p.id_tiket = t.id_tiket
@@ -58,32 +55,16 @@ mysqli_stmt_close($stmt);
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/checkin.css">
-  <link rel="stylesheet" href="styles/headerfooter.css">
+  <link rel="stylesheet" href="styles/checkIn.css">
+  <link rel="stylesheet" href="styles/headerFooter.css">
 </head>
 <body>
-  <div class="bg-decorations">
-    <div class="decoration-circle"></div>
-    <div class="decoration-circle"></div>
-  </div>
-
-  <header>
-    <a href="LandingPage.php" class="logo-link">
-      <h1>✈️ AIRtix.id</h1>
-    </a>
-    <nav>
-      <ul>
-        <li><a href="profile.php" class="username-btn">👋 <?php echo htmlspecialchars($username); ?></a></li>
-        <li><a href="history.php">📋 Riwayat</a></li>
-        <li><a href="checkin.php">✅ Check-in</a></li>
-        <li><a class="logout-btn" href="logout.php">Logout</a></li>
-      </ul>
-    </nav>
-  </header>
+  <?php renderBackgroundDecorations(); ?>
+  <?php renderHeader($username); ?>
 
   <main>
     <div class="back-wrapper">
-      <a href="LandingPage.php" class="back-btn">← Kembali ke Beranda</a>
+      <a href="landingPage.php" class="back-btn">← Kembali ke Beranda</a>
     </div>
 
     <h1 class="page-title">✅ Check-in Online</h1>
@@ -171,9 +152,7 @@ mysqli_stmt_close($stmt);
     <?php endif; ?>
   </main>
 
-  <footer>
-    <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
-  </footer>
+  <?php renderFooter(); ?>
 
   <script>
     const successAlert = document.querySelector('.success-alert');

@@ -3,7 +3,7 @@ session_start();
 include 'connector.php';
 
 if (isset($_SESSION['username'])) {
-    header("Location: LandingPage.php");
+    header("Location: landingPage.php");
     exit();
 }
 
@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             session_regenerate_id(true);
 
             mysqli_stmt_close($stmt);
-            header("Location: LandingPage.php");
+            header("Location: landingPage.php");
             exit();
         } else {
             $message = "Email atau password tidak valid";
@@ -92,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     Belum memiliki akun AIRtix.id?<br>
                     Daftarkan diri Anda untuk memulai petualangan
                 </p>
-                <button class="signup-button" onclick="window.location.href='signup.php'">SIGN UP</button>
+                <button class="signup-button" onclick="window.location.href='signUp.php'">SIGN UP</button>
             </div>
         </div>
     </div>

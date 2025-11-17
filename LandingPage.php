@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'connector.php';
+include 'headerFooter.php';
 
 if (!isset($_SESSION['username'])) {
     header("Location: index.php");
@@ -19,29 +20,12 @@ $username = $_SESSION['username'];
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/LandingPage.css">
-  <link rel="stylesheet" href="styles/headerfooter.css">
-  <link rel="stylesheet" href="styles/headerfooter.css">
+  <link rel="stylesheet" href="styles/landingPage.css">
+  <link rel="stylesheet" href="styles/headerFooter.css">
 </head>
 <body>
-  <div class="bg-decorations">
-    <div class="decoration-circle"></div>
-    <div class="decoration-circle"></div>
-  </div>
-
-  <header>
-    <a href="LandingPage.php" class="logo-link">
-      <h1>✈️ AIRtix.id</h1>
-    </a>
-    <nav>
-      <ul>
-        <li><a href="profile.php" class="username-btn">👋 <?php echo htmlspecialchars($username); ?></a></li>
-        <li><a href="history.php">📋 Riwayat</a></li>
-        <li><a href="checkin.php">✅ Check-in</a></li>
-        <li><a class="logout-btn" href="logout.php">Logout</a></li>
-      </ul>
-    </nav>
-  </header>
+  <?php renderBackgroundDecorations(); ?>
+  <?php renderHeader($username); ?>
 
   <section class="hero">
     <div class="hero-content">
@@ -93,7 +77,7 @@ $username = $_SESSION['username'];
       <div class="feature-icon">✅</div>
       <h3>Check-in Online</h3>
       <p>Hemat waktu Anda dengan melakukan check-in secara online sebelum keberangkatan.</p>
-      <a href="checkin.php" class="feature-btn">Check-in Now</a>
+      <a href="checkIn.php" class="feature-btn">Check-in Now</a>
     </div>
     
     <div class="feature-card">
@@ -104,8 +88,6 @@ $username = $_SESSION['username'];
     </div>
   </section>
 
-  <footer>
-    <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
-  </footer>
+  <?php renderFooter(); ?>
 </body>
 </html>

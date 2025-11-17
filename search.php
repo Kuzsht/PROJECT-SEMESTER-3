@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'connector.php';
+include 'headerFooter.php';
 
 if (!isset($_SESSION['username'])) {
     header("Location: index.php");
@@ -27,27 +28,11 @@ $result = mysqli_query($conn, $query);
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/search.css">
-  <link rel="stylesheet" href="styles/headerfooter.css">
+  <link rel="stylesheet" href="styles/headerFooter.css">
 </head>
 <body>
-  <div class="bg-decorations">
-    <div class="decoration-circle"></div>
-    <div class="decoration-circle"></div>
-  </div>
-
-  <header>
-    <a href="LandingPage.php" class="logo-link">
-      <h1>✈️ AIRtix.id</h1>
-    </a>
-    <nav>
-      <ul>
-        <li><a href="profile.php" class="username-btn">👋 <?php echo htmlspecialchars($username); ?></a></li>
-        <li><a href="history.php">📋 Riwayat</a></li>
-        <li><a href="checkin.php">✅ Check-in</a></li>
-        <li><a class="logout-btn" href="logout.php">Logout</a></li>
-      </ul>
-    </nav>
-  </header>
+  <?php renderBackgroundDecorations(); ?>
+  <?php renderHeader($username); ?>
 
   <main>
     <div class="back-wrapper">
@@ -81,7 +66,7 @@ $result = mysqli_query($conn, $query);
               <div class="price-amount">Rp <?php echo number_format($ticket['harga_satukursi'], 0, ',', '.'); ?></div>
             </div>
 
-            <form action="inputsearch.php" method="get">
+            <form action="inputSearch.php" method="get">
               <input type="hidden" name="id_tiket" value="<?php echo $ticket['id_tiket']; ?>">
               <input type="hidden" name="from" value="<?php echo htmlspecialchars($ticket['asal_kota']); ?>">
               <input type="hidden" name="to" value="<?php echo htmlspecialchars($ticket['tujuan_kota']); ?>">
@@ -101,8 +86,6 @@ $result = mysqli_query($conn, $query);
     <?php endif; ?>
   </main>
 
-  <footer>
-    <p>&copy; 2025 AIRtix.id | All Rights Reserved | Melayani Perjalanan Anda dengan Sepenuh Hati ❤️</p>
-  </footer>
+  <?php renderFooter(); ?>
 </body>
 </html>

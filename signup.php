@@ -3,7 +3,7 @@ session_start();
 include 'connector.php';
 
 if (isset($_SESSION['username'])) {
-    header("Location: LandingPage.php");
+    header("Location: landingPage.php");
     exit();
 }
 
@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/signup.css">
+    <link rel="stylesheet" href="styles/signUp.css">
 </head>
 <body>
     <div class="container">
