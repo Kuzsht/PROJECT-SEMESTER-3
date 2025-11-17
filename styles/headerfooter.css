@@ -1,160 +1,275 @@
-    header {
-      background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
-      padding: 20px 50px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.3);
-    }
+/* ========================
+   HEADER STYLES
+   ======================== */
+header {
+  background: linear-gradient(135deg, rgb(75, 171, 255) 0%, #1976D2 100%);
+  padding: 18px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
 
-    .logo-link {
-      text-decoration: none;
-      color: white;
-      transition: opacity 0.3s ease;
-      cursor: pointer;
-    }
+/* Logo Styles */
+.logo-link {
+  text-decoration: none;
+  color: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
 
-    .logo-link:hover {
-      opacity: 0.85;
-    }
+.logo-link:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
 
-    .logo-link h1 {
-      font-size: 36px;
-      font-weight: 800;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-      letter-spacing: -1px;
-    }
+.logo-link h1 {
+  font-size: 36px;
+  font-weight: 800;
+  text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.25);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
 
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+/* Navigation Styles */
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+}
 
-    nav a, .username-btn {
-      color: white;
-      text-decoration: none;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      padding: 12px 22px;
-      border-radius: 15px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      cursor: pointer;
-      display: inline-block;
-    }
+/* Base Button Styles */
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  white-space: nowrap;
+}
 
-    nav a:hover, .username-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 255, 255, 1);
-    }
+/* Username Display (Non-clickable style) */
+.username-display {
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+  padding: 10px 24px;
+  pointer-events: none;
+  cursor: default;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
-    .username-btn {
-      font-weight: 700;
-      padding: 12px 26px;
-      background: rgba(255,255,255,0.25);
-      border: 2px solid rgba(255,255,255,0.3);
-    }
+/* Regular Navigation Buttons */
+.nav-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
 
-    .logout-btn {
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      padding: 12px 26px;
-      border-radius: 25px;
-      border: 2px solid rgba(255,255,255,0.2);
-      box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
-    }
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+}
 
-    .logout-btn:hover {
-      box-shadow: 0 8px 30px rgba(255, 0, 0, 1);
-      background: white;
-      color:rgba(255, 0, 0, 0.5)
-    }
+/* Profile Button */
+.profile-btn {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 24px;
+  box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+  font-weight: 700;
+}
 
-    footer {
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      color: #ccc;
-      text-align: center;
-      padding: 45px 20px;
-      margin-top: 0;
-      font-size: 16px;
-      position: relative;
-    }
+.profile-btn:hover {
+  background: linear-gradient(135deg, #af7ac5 0%, #9b59b6 100%);
+  box-shadow: 0 6px 25px rgba(155, 89, 182, 0.6);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.5);
+}
 
-    footer::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, rgb(75, 171, 255), transparent);
-    }
+/* Logout Button */
+.logout-btn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 24px;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+  font-weight: 700;
+}
 
-    footer p {
-      font-weight: 600;
-    }
+.logout-btn:hover {
+  background: linear-gradient(135deg, #ec7063 0%, #e74c3c 100%);
+  box-shadow: 0 6px 25px rgba(231, 76, 60, 0.6);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.5);
+}
 
-    /* Mobile Large Breakpoint */
-    @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-        gap: 18px;
-        padding: 20px;
-      }
+/* ========================
+   FOOTER STYLES
+   ======================== */
+footer {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #ccc;
+  text-align: center;
+  padding: 45px 20px;
+  margin-top: 0;
+  font-size: 16px;
+  position: relative;
+}
 
-      .logo-link h1 {
-        font-size: 30px;
-      }
+footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgb(75, 171, 255), transparent);
+}
 
-      nav ul {
-        justify-content: center;
-        gap: 8px;
-      }
+footer p {
+  font-weight: 600;
+  margin: 0;
+}
 
-      nav a, .username-btn {
-        padding: 10px 18px;
-        font-size: 14px;
-      }
+/* ========================
+   RESPONSIVE DESIGN
+   ======================== */
 
-      .logout-btn {
-        padding: 10px 20px;
-      }
+/* Tablet Breakpoint */
+@media (max-width: 992px) {
+  header {
+    padding: 18px 30px;
+  }
 
-      footer {
-        padding: 35px 20px;
-        font-size: 14px;
-      }
-    }
+  .logo-link h1 {
+    font-size: 32px;
+  }
 
-    /* Mobile Small Breakpoint */
-    @media (max-width: 480px) {
-      .logo-link h1 {
-        font-size: 24px;
-      }
+  nav ul {
+    gap: 8px;
+  }
 
-      nav ul {
-        gap: 6px;
-      }
+  nav a {
+    padding: 9px 18px;
+    font-size: 14px;
+  }
 
-      nav a, .username-btn {
-        padding: 8px 14px;
-        font-size: 12px;
-        border-radius: 12px;
-      }
+  .username-display,
+  .profile-btn,
+  .logout-btn {
+    padding: 9px 20px;
+  }
+}
 
-      .logout-btn {
-        padding: 8px 16px;
-      }
+/* Mobile Large Breakpoint */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px 20px;
+  }
 
-        footer {
-            padding: 25px 15px;
-            font-size: 12px;
-        }
-    }
+  .logo-link h1 {
+    font-size: 28px;
+  }
+
+  nav ul {
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+  }
+
+  nav a {
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .username-display {
+    padding: 8px 18px;
+  }
+
+  .profile-btn,
+  .logout-btn {
+    padding: 8px 18px;
+  }
+
+  footer {
+    padding: 35px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Mobile Small Breakpoint */
+@media (max-width: 480px) {
+  header {
+    padding: 15px;
+  }
+
+  .logo-link h1 {
+    font-size: 24px;
+  }
+
+  nav ul {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  nav a {
+    padding: 7px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    gap: 4px;
+  }
+
+  .username-display {
+    padding: 7px 14px;
+    width: 100%;
+    text-align: center;
+    order: -1;
+  }
+
+  .profile-btn,
+  .logout-btn {
+    padding: 7px 14px;
+  }
+
+  footer {
+    padding: 25px 15px;
+    font-size: 12px;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+  .logo-link h1 {
+    font-size: 20px;
+  }
+
+  nav a {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .username-display,
+  .profile-btn,
+  .logout-btn {
+    padding: 6px 12px;
+  }
+}

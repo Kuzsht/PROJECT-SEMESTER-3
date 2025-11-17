@@ -1,4 +1,7 @@
 <?php
+// headerFooter.php - Komponen Header dan Footer untuk AIRtix.id
+// Pastikan session sudah dimulai sebelum include file ini
+
 if (!isset($_SESSION['username'])) {
     $username = 'Guest';
 } else {
@@ -13,10 +16,11 @@ function renderHeader($username) {
     </a>
     <nav>
       <ul>
-        <li><a href="profile.php" class="username-btn">👋 <?php echo htmlspecialchars($username); ?></a></li>
-        <li><a href="history.php">📋 Riwayat</a></li>
-        <li><a href="checkIn.php">✅ Check-in</a></li>
-        <li><a class="logout-btn" href="logOut.php">Logout</a></li>
+        <li><a href="profile.php" class="username-display">👋 <?php echo htmlspecialchars($username); ?></a></li>
+        <li><a href="history.php" class="nav-btn">Riwayat</a></li>
+        <li><a href="checkIn.php" class="nav-btn">Check-in</a></li>
+        <li><a href="profile.php" class="profile-btn">Profil</a></li>
+        <li><a href="logOut.php" class="logout-btn">Logout</a></li>
       </ul>
     </nav>
   </header>
