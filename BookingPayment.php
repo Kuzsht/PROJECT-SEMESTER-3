@@ -44,7 +44,7 @@ $totalPrice = $passengerCount * $price;
 </head>
 <body>
   <?php renderBackgroundDecorations(); ?>
-  <?php renderHeader($username); ?>
+  <?php renderHeader($username, $conn); ?>
 
   <main>
     <h1 class="page-title">💳 Pembayaran</h1>

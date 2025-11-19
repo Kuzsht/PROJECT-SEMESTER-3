@@ -74,7 +74,7 @@ if (!$success) {
 </head>
 <body>
   <?php renderBackgroundDecorations(); ?>
-  <?php renderHeader($username); ?>
+  <?php renderHeader($username, $conn); ?>
 
   <main>
     <div class="success-container">

@@ -25,7 +25,7 @@ $username = $_SESSION['username'];
 </head>
 <body>
   <?php renderBackgroundDecorations(); ?>
-  <?php renderHeader($username); ?>
+  <?php renderHeader($username, $conn); ?>
 
   <section class="hero">
     <div class="hero-content">

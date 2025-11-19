@@ -84,6 +84,7 @@ if (isset($_POST['upload']) || isset($_POST['edit'])) {
                     $message = "Foto profil berhasil diunggah!";
                     $messageType = "success";
                     $photo = $photoPathDB;
+                    $_SESSION['photo'] = $photoPathDB; // ⭐ UPDATE SESSION!
                     $hasPhoto = true;
                 } else {
                     $message = "Gagal memindahkan file upload.";
@@ -113,6 +114,7 @@ if (isset($_POST['delete'])) {
     mysqli_stmt_close($updateStmt);
     
     $photo = '';
+    $_SESSION['photo'] = ''; // ⭐ UPDATE SESSION!
     $message = "Foto profil berhasil dihapus.";
     $messageType = "success";
     $hasPhoto = false;
@@ -136,7 +138,7 @@ $profilePhotoURL = getProfilePhoto($photo);
 </head>
 <body>
   <?php renderBackgroundDecorations(); ?>
-  <?php renderHeader($username); ?>
+  <?php renderHeader($username, $conn); ?>
 
   <main>
     <div class="back-wrapper">

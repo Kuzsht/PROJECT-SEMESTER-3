@@ -46,7 +46,7 @@ mysqli_stmt_close($stmt);
 </head>
 <body>
   <?php renderBackgroundDecorations(); ?>
-  <?php renderHeader($username); ?>
+  <?php renderHeader($username, $conn); ?>
 
   <main>
 

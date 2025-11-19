@@ -32,7 +32,7 @@ $result = mysqli_query($conn, $query);
 </head>
 <body>
   <?php renderBackgroundDecorations(); ?>
-  <?php renderHeader($username); ?>
+  <?php renderHeader($username, $conn); ?>
 
   <main>
     <div class="back-wrapper">

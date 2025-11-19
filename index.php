@@ -27,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['username'] = $row['username'];
             $_SESSION['name'] = $row['name'];
             $_SESSION['email_user'] = $row['email_user'];
+            $_SESSION['photo'] = $row['photo'];
 
             // Ncegah fixation 
             session_regenerate_id(true);
