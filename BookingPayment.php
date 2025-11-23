@@ -2,32 +2,48 @@
 session_start();
 include 'connector.php';
 include 'headerFooter.php';
+include 'csrf_helper.php';
+
+// Cek login
+requireLogin();
+initSecureSession();
 
 $username = $_SESSION['username'];
 
-if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
-    exit();
-}
-
-// Jupuk data seat.php
+// Validasi dan sanitasi input
 $id_tiket = isset($_GET['id_tiket']) ? intval($_GET['id_tiket']) : 0;
-$seats = isset($_GET['seats']) ? explode(",", $_GET['seats']) : [];
+$seatsRaw = isset($_GET['seats']) ? sanitizeInput($_GET['seats']) : '';
 $passengerCount = isset($_GET['passenger']) ? intval($_GET['passenger']) : 1;
-$from = isset($_GET['from']) ? $_GET['from'] : '';
-$to = isset($_GET['to']) ? $_GET['to'] : '';
-$date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
-$airline = isset($_GET['airline']) ? $_GET['airline'] : '';
+$from = isset($_GET['from']) ? sanitizeInput($_GET['from']) : '';
+$to = isset($_GET['to']) ? sanitizeInput($_GET['to']) : '';
+$date = isset($_GET['date']) ? sanitizeInput($_GET['date']) : date('Y-m-d');
+$airline = isset($_GET['airline']) ? sanitizeInput($_GET['airline']) : '';
 $price = isset($_GET['price']) ? intval($_GET['price']) : 0;
 
+// Parse seats
+$seats = array_filter(array_map('trim', explode(",", $seatsRaw)));
+
 // Validasi data
-if ($id_tiket == 0 || empty($from) || empty($to) || empty($seats)) {
-    header("Location: search.php");
-    exit();
+if ($id_tiket == 0 || empty($from) || empty($to) || empty($seats) || $passengerCount == 0) {
+    safeRedirect("search.php");
 }
 
-// Itung total rego
+// Validasi jumlah kursi sesuai dengan jumlah penumpang
+if (count($seats) != $passengerCount) {
+    safeRedirect("seat.php?id_tiket=$id_tiket&from=$from&to=$to&date=$date&airline=$airline&price=$price&penumpang=$passengerCount");
+}
+
+// Validasi tanggal
+$dateObj = DateTime::createFromFormat('Y-m-d', $date);
+if (!$dateObj || $dateObj->format('Y-m-d') !== $date) {
+    safeRedirect("search.php");
+}
+
+// Hitung total harga
 $totalPrice = $passengerCount * $price;
+
+// Generate CSRF token
+$csrfToken = generateCsrfToken();
 ?>
 
 <!DOCTYPE html>
@@ -56,12 +72,12 @@ $totalPrice = $passengerCount * $price;
         
         <div class="summary-item">
           <label>🛫 Dari:</label>
-          <span><?php echo htmlspecialchars($from); ?></span>
+          <span><?php echo htmlspecialchars($from, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
 
         <div class="summary-item">
           <label>🛬 Ke:</label>
-          <span><?php echo htmlspecialchars($to); ?></span>
+          <span><?php echo htmlspecialchars($to, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
 
         <div class="summary-item">
@@ -80,7 +96,7 @@ $totalPrice = $passengerCount * $price;
             <?php 
             if (!empty($seats)) {
               foreach ($seats as $seat) {
-                echo "<span class='seat-tag'>" . htmlspecialchars($seat) . "</span>";
+                echo "<span class='seat-tag'>" . htmlspecialchars($seat, ENT_QUOTES, 'UTF-8') . "</span>";
               }
             } else {
               echo "<span style='color: #999;'>Belum ada kursi dipilih</span>";
@@ -108,19 +124,21 @@ $totalPrice = $passengerCount * $price;
           </div>
         </div>
 
-        <form action="paymentSuccess.php" method="POST">
+        <form action="paymentSuccess.php" method="POST" id="paymentForm">
+          <?php echo csrfTokenInput(); ?>
+          
           <!-- Hidden fields untuk kirim data -->
           <input type="hidden" name="id_tiket" value="<?php echo $id_tiket; ?>">
-          <input type="hidden" name="seats" value="<?php echo htmlspecialchars(implode(',', $seats)); ?>">
+          <input type="hidden" name="seats" value="<?php echo htmlspecialchars(implode(',', $seats), ENT_QUOTES, 'UTF-8'); ?>">
           <input type="hidden" name="passenger" value="<?php echo $passengerCount; ?>">
-          <input type="hidden" name="from" value="<?php echo htmlspecialchars($from); ?>">
-          <input type="hidden" name="to" value="<?php echo htmlspecialchars($to); ?>">
-          <input type="hidden" name="date" value="<?php echo htmlspecialchars($date); ?>">
+          <input type="hidden" name="from" value="<?php echo htmlspecialchars($from, ENT_QUOTES, 'UTF-8'); ?>">
+          <input type="hidden" name="to" value="<?php echo htmlspecialchars($to, ENT_QUOTES, 'UTF-8'); ?>">
+          <input type="hidden" name="date" value="<?php echo htmlspecialchars($date, ENT_QUOTES, 'UTF-8'); ?>">
           <input type="hidden" name="price" value="<?php echo $price; ?>">
 
           <div class="form-group">
             <label for="nama">👤 Nama Pemilik Kartu</label>
-            <input type="text" id="nama" name="nama" placeholder="Contoh: Budi Santoso" required>
+            <input type="text" id="nama" name="nama" placeholder="Contoh: Budi Santoso" required maxlength="100">
           </div>
 
           <div class="form-group">
@@ -136,7 +154,7 @@ $totalPrice = $passengerCount * $price;
 
             <div class="form-group">
               <label for="cvv">🔒 CVV</label>
-              <input type="password" id="cvv" name="cvv" maxlength="3" placeholder="123" required>
+              <input type="password" id="cvv" name="cvv" maxlength="4" placeholder="123" required>
             </div>
           </div>
 
@@ -152,7 +170,7 @@ $totalPrice = $passengerCount * $price;
   <?php renderFooter(); ?>
 
   <script>
-    // Gawe format card number
+    // Format card number
     const cardInput = document.getElementById('card');
     cardInput.addEventListener('input', (e) => {
       let value = e.target.value.replace(/\s/g, '');
@@ -160,7 +178,7 @@ $totalPrice = $passengerCount * $price;
       e.target.value = formattedValue;
     });
 
-    // Validasi anu
+    // Validasi hanya angka untuk card
     cardInput.addEventListener('keypress', (e) => {
       if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {
         e.preventDefault();
@@ -172,6 +190,37 @@ $totalPrice = $passengerCount * $price;
     cvvInput.addEventListener('keypress', (e) => {
       if (!/[0-9]/.test(e.key) && e.key !== 'Backspace') {
         e.preventDefault();
+      }
+    });
+    
+    // Set minimum bulan ke bulan ini
+    const expInput = document.getElementById('exp');
+    const today = new Date();
+    const minMonth = today.toISOString().slice(0, 7);
+    expInput.min = minMonth;
+    
+    // Validasi form
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+      const cardNumber = cardInput.value.replace(/\s/g, '');
+      const cvv = cvvInput.value;
+      const exp = expInput.value;
+      
+      if (cardNumber.length < 13 || cardNumber.length > 19) {
+        e.preventDefault();
+        alert('Nomor kartu tidak valid!');
+        return false;
+      }
+      
+      if (cvv.length < 3 || cvv.length > 4) {
+        e.preventDefault();
+        alert('CVV tidak valid!');
+        return false;
+      }
+      
+      if (!exp) {
+        e.preventDefault();
+        alert('Tanggal expired harus diisi!');
+        return false;
       }
     });
   </script>

@@ -2,16 +2,16 @@
 session_start();
 include 'connector.php';
 include 'headerFooter.php';
+include 'csrf_helper.php';
 
-if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
-    header("Location: index.php");
-    exit();
-}
+// Cek login
+requireLogin();
+initSecureSession();
 
 $username = $_SESSION['username'];
 $id_user = $_SESSION['id_user'];
 
-// query ne cak
+// Query dengan prepared statement
 $query = "SELECT p.*, t.asal_kota, t.tujuan_kota, m.nama_maskapai 
           FROM pemesanan p
           INNER JOIN tiket t ON p.id_tiket = t.id_tiket
@@ -49,7 +49,6 @@ mysqli_stmt_close($stmt);
   <?php renderHeader($username, $conn); ?>
 
   <main>
-
     <div class="back-wrapper">
       <a href="landingPage.php" class="back-btn">← Kembali ke Beranda</a>
     </div>
@@ -67,13 +66,12 @@ mysqli_stmt_close($stmt);
     <?php else: ?>
       <div class="bookings-grid">
         <?php foreach ($bookings as $booking): 
-
-          // string ng array
+          // Konversi string ke array
           $seats = !empty($booking['kursi_dipilih']) ? explode(',', $booking['kursi_dipilih']) : [];
         ?>
           <div class="booking-card">
             <div class="booking-header">
-              <div class="booking-code"><?php echo htmlspecialchars($booking['kode_pemesanan']); ?></div>
+              <div class="booking-code"><?php echo htmlspecialchars($booking['kode_pemesanan'], ENT_QUOTES, 'UTF-8'); ?></div>
               <span class="booking-status <?php echo $booking['checkin'] == 1 ? 'status-checkedin' : 'status-pending'; ?>">
                 <?php echo $booking['checkin'] == 1 ? 'Sudah Check-in' : 'Belum Check-in'; ?>
               </span>
@@ -81,12 +79,12 @@ mysqli_stmt_close($stmt);
 
             <div class="booking-route">
               <div class="route-city">
-                <div class="route-city-name"><?php echo htmlspecialchars($booking['asal_kota']); ?></div>
+                <div class="route-city-name"><?php echo htmlspecialchars($booking['asal_kota'], ENT_QUOTES, 'UTF-8'); ?></div>
                 <small>🛫 Keberangkatan</small>
               </div>
               <div class="route-icon">✈️</div>
               <div class="route-city">
-                <div class="route-city-name"><?php echo htmlspecialchars($booking['tujuan_kota']); ?></div>
+                <div class="route-city-name"><?php echo htmlspecialchars($booking['tujuan_kota'], ENT_QUOTES, 'UTF-8'); ?></div>
                 <small>🛬 Tujuan</small>
               </div>
             </div>
@@ -94,7 +92,7 @@ mysqli_stmt_close($stmt);
             <div class="booking-details">
               <div class="detail-row">
                 <span class="detail-label">✈️ Maskapai</span>
-                <span class="detail-value"><?php echo htmlspecialchars($booking['nama_maskapai']); ?></span>
+                <span class="detail-value"><?php echo htmlspecialchars($booking['nama_maskapai'], ENT_QUOTES, 'UTF-8'); ?></span>
               </div>
 
               <div class="detail-row">
@@ -111,7 +109,7 @@ mysqli_stmt_close($stmt);
                 <span class="detail-label">🪑 Kursi</span>
                 <div class="seats-mini">
                   <?php foreach ($seats as $seat): ?>
-                    <span class="seat-mini"><?php echo htmlspecialchars(trim($seat)); ?></span>
+                    <span class="seat-mini"><?php echo htmlspecialchars(trim($seat), ENT_QUOTES, 'UTF-8'); ?></span>
                   <?php endforeach; ?>
                 </div>
               </div>

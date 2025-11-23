@@ -2,27 +2,44 @@
 session_start();
 include 'connector.php';
 include 'headerFooter.php';
+include 'csrf_helper.php';
 
-if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
-    exit();
-}
+// Cek login
+requireLogin();
+initSecureSession();
 
 $username = $_SESSION['username'];
 
-// Ambil data dari inputsearch.php
+// Ambil dan validasi data dari inputsearch.php
 $id_tiket = isset($_GET['id_tiket']) ? intval($_GET['id_tiket']) : 0;
-$penumpang = isset($_GET['penumpang']) ? (int)$_GET['penumpang'] : 1;
-$from = isset($_GET['from']) ? $_GET['from'] : '';
-$to = isset($_GET['to']) ? $_GET['to'] : '';
-$date = isset($_GET['date']) ? $_GET['date'] : '';
-$airline = isset($_GET['airline']) ? $_GET['airline'] : '';
+$penumpang = isset($_GET['penumpang']) ? intval($_GET['penumpang']) : 1;
+$from = isset($_GET['from']) ? sanitizeInput($_GET['from']) : '';
+$to = isset($_GET['to']) ? sanitizeInput($_GET['to']) : '';
+$date = isset($_GET['date']) ? sanitizeInput($_GET['date']) : '';
+$airline = isset($_GET['airline']) ? sanitizeInput($_GET['airline']) : '';
 $price = isset($_GET['price']) ? intval($_GET['price']) : 0;
 
 // Validasi data
-if ($id_tiket == 0 || empty($from) || empty($to)) {
-    header("Location: search.php");
-    exit();
+if ($id_tiket == 0 || empty($from) || empty($to) || empty($date)) {
+    safeRedirect("search.php");
+}
+
+// Validasi tanggal
+$dateObj = DateTime::createFromFormat('Y-m-d', $date);
+if (!$dateObj || $dateObj->format('Y-m-d') !== $date) {
+    safeRedirect("search.php");
+}
+
+// Validasi tanggal tidak boleh di masa lalu
+$today = new DateTime();
+$today->setTime(0, 0, 0);
+if ($dateObj < $today) {
+    safeRedirect("search.php");
+}
+
+// Validasi jumlah penumpang (1-6)
+if ($penumpang < 1 || $penumpang > 6) {
+    safeRedirect("inputSearch.php?id_tiket=$id_tiket&from=$from&to=$to&airline=$airline&price=$price");
 }
 
 // Ambil kursi yang sudah dipesan untuk tiket dan tanggal ini
@@ -37,7 +54,9 @@ $resultBooked = mysqli_stmt_get_result($stmt);
 while ($row = mysqli_fetch_assoc($resultBooked)) {
     if (!empty($row['kursi_dipilih'])) {
         $seats = explode(',', $row['kursi_dipilih']);
-        $bookedSeats = array_merge($bookedSeats, $seats);
+        foreach ($seats as $seat) {
+            $bookedSeats[] = trim($seat);
+        }
     }
 }
 mysqli_stmt_close($stmt);
@@ -74,10 +93,10 @@ mysqli_stmt_close($stmt);
       <form id="seatForm" method="get" action="bookingPayment.php">
         <!-- Hidden fields -->
         <input type="hidden" name="id_tiket" value="<?php echo $id_tiket; ?>">
-        <input type="hidden" name="from" value="<?php echo htmlspecialchars($from); ?>">
-        <input type="hidden" name="to" value="<?php echo htmlspecialchars($to); ?>">
-        <input type="hidden" name="date" value="<?php echo htmlspecialchars($date); ?>">
-        <input type="hidden" name="airline" value="<?php echo htmlspecialchars($airline); ?>">
+        <input type="hidden" name="from" value="<?php echo htmlspecialchars($from, ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="to" value="<?php echo htmlspecialchars($to, ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="date" value="<?php echo htmlspecialchars($date, ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="airline" value="<?php echo htmlspecialchars($airline, ENT_QUOTES, 'UTF-8'); ?>">
         <input type="hidden" name="price" value="<?php echo $price; ?>">
         <input type="hidden" name="passenger" value="<?php echo $penumpang; ?>">
         <input type="hidden" name="seats" id="selectedSeats" value="">
@@ -94,9 +113,9 @@ mysqli_stmt_close($stmt);
               $isBooked = in_array($seatNumber, $bookedSeats);
             ?>
               <div class="seat <?php echo $isBooked ? 'booked' : ''; ?>" 
-                   data-seat="<?php echo $seatNumber; ?>"
+                   data-seat="<?php echo htmlspecialchars($seatNumber, ENT_QUOTES, 'UTF-8'); ?>"
                    <?php echo $isBooked ? 'data-booked="true"' : ''; ?>>
-                <?php echo $seatNumber; ?>
+                <?php echo htmlspecialchars($seatNumber, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php endfor; ?>
           </div>
@@ -134,7 +153,7 @@ mysqli_stmt_close($stmt);
     const seatForm = document.getElementById('seatForm');
     const submitBtn = document.getElementById('submitBtn');
     const counterDisplay = document.getElementById('counterDisplay');
-    const maxSeats = <?php echo $penumpang; ?>;
+    const maxSeats = <?php echo intval($penumpang); ?>;
 
     let selected = [];
 
@@ -151,7 +170,7 @@ mysqli_stmt_close($stmt);
     }
 
     seats.forEach(seat => {
-      // Skip kursi sg wes dipesan
+      // Skip kursi yang sudah dipesan
       if (seat.dataset.booked === 'true') {
         seat.addEventListener('click', () => {
           alert('⚠️ Kursi ini sudah dipesan oleh penumpang lain!');
@@ -193,13 +212,5 @@ mysqli_stmt_close($stmt);
 
     updateCounter();
   </script>
-
-  <style>
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-10px); }
-      75% { transform: translateX(10px); }
-    }
-  </style>
 </body>
 </html>

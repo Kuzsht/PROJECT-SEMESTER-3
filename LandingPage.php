@@ -1,14 +1,46 @@
 <?php
 session_start();
 include 'connector.php';
-include 'headerFooter.php';
+include 'csrf_helper.php';
 
-if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
-    exit();
-}
+// Cek login
+requireLogin();
+initSecureSession();
 
 $username = $_SESSION['username'];
+
+// Query untuk mendapatkan statistik dinamis dengan prepared statements
+// Total Pemesanan
+$queryPemesanan = "SELECT COUNT(*) as total FROM pemesanan";
+$stmtPemesanan = mysqli_prepare($conn, $queryPemesanan);
+mysqli_stmt_execute($stmtPemesanan);
+$resultPemesanan = mysqli_stmt_get_result($stmtPemesanan);
+$totalPemesanan = mysqli_fetch_assoc($resultPemesanan)['total'];
+mysqli_stmt_close($stmtPemesanan);
+
+// Total Maskapai
+$queryMaskapai = "SELECT COUNT(*) as total FROM maskapai";
+$stmtMaskapai = mysqli_prepare($conn, $queryMaskapai);
+mysqli_stmt_execute($stmtMaskapai);
+$resultMaskapai = mysqli_stmt_get_result($stmtMaskapai);
+$totalMaskapai = mysqli_fetch_assoc($resultMaskapai)['total'];
+mysqli_stmt_close($stmtMaskapai);
+
+// Total Tiket/Penerbangan
+$queryTiket = "SELECT COUNT(*) as total FROM tiket";
+$stmtTiket = mysqli_prepare($conn, $queryTiket);
+mysqli_stmt_execute($stmtTiket);
+$resultTiket = mysqli_stmt_get_result($stmtTiket);
+$totalTiket = mysqli_fetch_assoc($resultTiket)['total'];
+mysqli_stmt_close($stmtTiket);
+
+// Total User
+$queryUser = "SELECT COUNT(*) as total FROM user";
+$stmtUser = mysqli_prepare($conn, $queryUser);
+mysqli_stmt_execute($stmtUser);
+$resultUser = mysqli_stmt_get_result($stmtUser);
+$totalUser = mysqli_fetch_assoc($resultUser)['total'];
+mysqli_stmt_close($stmtUser);
 ?>
 
 <!DOCTYPE html>
@@ -24,8 +56,11 @@ $username = $_SESSION['username'];
   <link rel="stylesheet" href="styles/headerFooter.css">
 </head>
 <body>
-  <?php renderBackgroundDecorations(); ?>
-  <?php renderHeader($username, $conn); ?>
+  <?php 
+  include 'headerFooter.php';
+  renderBackgroundDecorations(); 
+  renderHeader($username, $conn); 
+  ?>
 
   <section class="hero">
     <div class="hero-content">
@@ -38,20 +73,20 @@ $username = $_SESSION['username'];
   <section class="stats-wrapper">
     <div class="stats-container">
       <div class="stat-box">
-        <div class="stat-number">1000+</div>
-        <div class="stat-label">Penerbangan</div>
+        <div class="stat-number"><?php echo number_format($totalTiket); ?></div>
+        <div class="stat-label">Tiket</div>
       </div>
       <div class="stat-box">
-        <div class="stat-number">50+</div>
+        <div class="stat-number"><?php echo number_format($totalMaskapai); ?></div>
         <div class="stat-label">Maskapai</div>
       </div>
       <div class="stat-box">
-        <div class="stat-number">100+</div>
-        <div class="stat-label">Destinasi</div>
+        <div class="stat-number"><?php echo number_format($totalPemesanan); ?></div>
+        <div class="stat-label">Pemesanan</div>
       </div>
       <div class="stat-box">
-        <div class="stat-number">10K+</div>
-        <div class="stat-label">Pelanggan Puas</div>
+        <div class="stat-number"><?php echo number_format($totalUser); ?></div>
+        <div class="stat-label">User Terdaftar</div>
       </div>
     </div>
   </section>

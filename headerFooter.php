@@ -11,7 +11,7 @@ function getProfilePhotoUrl($conn = null) {
     if (isset($_SESSION['photo']) && !empty($_SESSION['photo'])) {
         $photoPath = $_SESSION['photo'];
         if (file_exists($photoPath)) {
-            return $photoPath;
+            return htmlspecialchars($photoPath, ENT_QUOTES, 'UTF-8');
         }
     }
     
@@ -29,7 +29,7 @@ function getProfilePhotoUrl($conn = null) {
             if (!empty($row['photo']) && file_exists($row['photo'])) {
                 $_SESSION['photo'] = $row['photo']; // Update session
                 mysqli_stmt_close($stmt);
-                return $row['photo'];
+                return htmlspecialchars($row['photo'], ENT_QUOTES, 'UTF-8');
             }
         }
         mysqli_stmt_close($stmt);
@@ -43,15 +43,15 @@ function getProfilePhotoUrl($conn = null) {
 // Fungsi untuk mendapatkan nama lengkap user
 function getUserFullName() {
     if (isset($_SESSION['name']) && !empty($_SESSION['name'])) {
-        return $_SESSION['name'];
+        return htmlspecialchars($_SESSION['name'], ENT_QUOTES, 'UTF-8');
     }
-    return isset($_SESSION['username']) ? $_SESSION['username'] : 'User';
+    return isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8') : 'User';
 }
 
 // Fungsi untuk mendapatkan email user
 function getUserEmail() {
     if (isset($_SESSION['email_user']) && !empty($_SESSION['email_user'])) {
-        return $_SESSION['email_user'];
+        return htmlspecialchars($_SESSION['email_user'], ENT_QUOTES, 'UTF-8');
     }
     return '';
 }
@@ -60,6 +60,7 @@ function renderHeader($username, $conn = null) {
     $profilePhotoUrl = getProfilePhotoUrl($conn);
     $fullName = getUserFullName();
     $userEmail = getUserEmail();
+    $username = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
 ?>
   <header>
     <a href="landingPage.php" class="logo-link">
@@ -74,21 +75,21 @@ function renderHeader($username, $conn = null) {
       </ul>
       <!-- Right Navigation Group -->
       <ul class="right-nav">
-        <li><span class="username-display">👋 <?php echo htmlspecialchars($username); ?></span></li>
+        <li><span class="username-display"><?php echo $username; ?></span></li>
         <li class="profile-menu-container">
           <button type="button" class="profile-photo-btn" id="profileBtn" title="Profil Saya">
-            <img src="<?php echo htmlspecialchars($profilePhotoUrl); ?>" alt="Foto Profil" class="profile-photo">
+            <img src="<?php echo $profilePhotoUrl; ?>" alt="Foto Profil" class="profile-photo">
           </button>
           
           <!-- Profile Dropdown Menu -->
           <div class="profile-dropdown" id="profileDropdown">
             <!-- Header with user info -->
             <div class="dropdown-header">
-              <img src="<?php echo htmlspecialchars($profilePhotoUrl); ?>" alt="Foto Profil" class="dropdown-header-photo">
+              <img src="<?php echo $profilePhotoUrl; ?>" alt="Foto Profil" class="dropdown-header-photo">
               <div class="dropdown-header-info">
-                <h3 class="dropdown-user-name"><?php echo htmlspecialchars($fullName); ?></h3>
+                <h3 class="dropdown-user-name"><?php echo $fullName; ?></h3>
                 <?php if (!empty($userEmail)): ?>
-                  <p class="dropdown-user-email"><?php echo htmlspecialchars($userEmail); ?></p>
+                  <p class="dropdown-user-email"><?php echo $userEmail; ?></p>
                 <?php endif; ?>
               </div>
             </div>
@@ -120,26 +121,28 @@ function renderHeader($username, $conn = null) {
       const dropdown = document.getElementById('profileDropdown');
       const overlay = document.getElementById('dropdownOverlay');
       
-      // Toggle dropdown saat button diklik
-      profileBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('active');
-        overlay.classList.toggle('active');
-      });
-      
-      // Close dropdown saat overlay diklik
-      overlay.addEventListener('click', function() {
-        dropdown.classList.remove('active');
-        overlay.classList.remove('active');
-      });
-      
-      // Close dropdown saat klik di luar
-      document.addEventListener('click', function(e) {
-        if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+      if (profileBtn && dropdown && overlay) {
+        // Toggle dropdown saat button diklik
+        profileBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          dropdown.classList.toggle('active');
+          overlay.classList.toggle('active');
+        });
+        
+        // Close dropdown saat overlay diklik
+        overlay.addEventListener('click', function() {
           dropdown.classList.remove('active');
           overlay.classList.remove('active');
-        }
-      });
+        });
+        
+        // Close dropdown saat klik di luar
+        document.addEventListener('click', function(e) {
+          if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('active');
+            overlay.classList.remove('active');
+          }
+        });
+      }
     });
   </script>
 <?php

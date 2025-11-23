@@ -1,49 +1,73 @@
 <?php
 session_start();
 include 'connector.php';
+include 'csrf_helper.php';
 
+// Redirect jika sudah login
 if (isset($_SESSION['username'])) {
-    header("Location: landingPage.php");
-    exit();
+    safeRedirect("landingPage.php");
 }
 
 $message = "";
+$showTimeout = isset($_GET['timeout']) && $_GET['timeout'] == '1';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email_user = trim($_POST['email']);
-    $password = trim($_POST['password']);
-
-    $query = "SELECT * FROM user WHERE email_user = ?";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, "s", $email_user);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-
-    if (mysqli_num_rows($result) == 1) {
-        $row = mysqli_fetch_assoc($result);
-        
-        if (password_verify($password, $row['password'])) {
-            $_SESSION['id_user'] = $row['id_user'];
-            $_SESSION['username'] = $row['username'];
-            $_SESSION['name'] = $row['name'];
-            $_SESSION['email_user'] = $row['email_user'];
-            $_SESSION['photo'] = $row['photo'];
-
-            // Ncegah fixation 
-            session_regenerate_id(true);
-
-            mysqli_stmt_close($stmt);
-            header("Location: landingPage.php");
-            exit();
-        } else {
-            $message = "Email atau password tidak valid";
-        }
+    // CSRF Protection
+    if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+        $message = "Invalid security token. Refresh halaman dan coba lagi.";
     } else {
-        $message = "Email atau password tidak valid";
+        $email_user = sanitizeInput($_POST['email']);
+        $password = $_POST['password']; // Jangan trim password
+        
+        // Validasi input
+        if (empty($email_user) || empty($password)) {
+            $message = "Email dan password harus diisi";
+        } elseif (!validateEmail($email_user)) {
+            $message = "Format email tidak valid";
+        } else {
+            // Rate limiting bisa ditambahkan di sini
+            
+            $query = "SELECT * FROM user WHERE email_user = ?";
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, "s", $email_user);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+
+            if (mysqli_num_rows($result) == 1) {
+                $row = mysqli_fetch_assoc($result);
+                
+                if (password_verify($password, $row['password'])) {
+                    // Regenerate session ID untuk mencegah session fixation
+                    session_regenerate_id(true);
+                    
+                    // Set session variables
+                    $_SESSION['id_user'] = $row['id_user'];
+                    $_SESSION['username'] = $row['username'];
+                    $_SESSION['name'] = $row['name'];
+                    $_SESSION['email_user'] = $row['email_user'];
+                    $_SESSION['photo'] = $row['photo'];
+                    $_SESSION['initialized'] = true;
+                    $_SESSION['last_activity'] = time();
+                    
+                    // Generate new CSRF token
+                    regenerateCsrfToken();
+
+                    mysqli_stmt_close($stmt);
+                    safeRedirect("landingPage.php");
+                } else {
+                    $message = "Email atau password tidak valid";
+                }
+            } else {
+                $message = "Email atau password tidak valid";
+            }
+            
+            mysqli_stmt_close($stmt);
+        }
     }
-    
-    mysqli_stmt_close($stmt);
 }
+
+// Generate CSRF token untuk form
+$csrfToken = generateCsrfToken();
 ?>
 
 <!DOCTYPE html>
@@ -65,13 +89,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="signin-subtitle">Selamat datang kembali!<br>Masuk untuk melanjutkan perjalanan Anda</p>
                 
                 <?php if ($message): ?>
-                    <p class="error-message"><?= htmlspecialchars($message) ?></p>
+                    <p class="error-message"><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></p>
                 <?php endif; ?>
 
                 <form method="POST" action="">
+                    <?php echo csrfTokenInput(); ?>
+                    
                     <div class="form-group">
                         <label class="form-label" for="email">EMAIL</label>
-                        <input type="email" id="email" name="email" class="form-input" required>
+                        <input type="email" id="email" name="email" class="form-input" required 
+                               value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email'], ENT_QUOTES, 'UTF-8') : ''; ?>">
                     </div>
                     
                     <div class="form-group">
@@ -97,5 +124,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </div>
     </div>
+    
+    <script>
+        // Cek notifikasi
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('registered') === 'success') {
+            showNotification('✅', 'Registrasi berhasil! Silakan login.', 'success');
+        }
+        
+        if (urlParams.get('timeout') === '1') {
+            showNotification('⏱️', 'Sesi Anda telah berakhir. Silakan login kembali.', 'warning');
+        }
+        
+        function showNotification(icon, text, type) {
+            const notification = document.createElement('div');
+            notification.className = type + '-notification';
+            notification.innerHTML = `
+                <span class="icon">${icon}</span>
+                <span>${text}</span>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('hide');
+                setTimeout(() => notification.remove(), 500);
+            }, 5000);
+            
+            // Bersihkan URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
 </body>
 </html>

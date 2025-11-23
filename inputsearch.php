@@ -2,24 +2,40 @@
 session_start();
 include 'connector.php';
 include 'headerFooter.php';
+include 'csrf_helper.php';
+
+// Cek login
+requireLogin();
+initSecureSession();
 
 $username = $_SESSION['username'];
 
-if (!isset($_SESSION['username'])) {
-    header("Location: index.php");
-    exit();
-}
-
+// Validasi dan sanitasi input GET
 $id_tiket = isset($_GET['id_tiket']) ? intval($_GET['id_tiket']) : 0;
-$from = isset($_GET['from']) ? $_GET['from'] : '';
-$to = isset($_GET['to']) ? $_GET['to'] : '';
-$airline = isset($_GET['airline']) ? $_GET['airline'] : '';
+$from = isset($_GET['from']) ? sanitizeInput($_GET['from']) : '';
+$to = isset($_GET['to']) ? sanitizeInput($_GET['to']) : '';
+$airline = isset($_GET['airline']) ? sanitizeInput($_GET['airline']) : '';
 $price = isset($_GET['price']) ? intval($_GET['price']) : 0;
 
+// Validasi data - pastikan ID tiket valid dan data lengkap
 if ($id_tiket == 0 || empty($from) || empty($to)) {
-    header("Location: search.php");
-    exit();
+    safeRedirect("search.php");
 }
+
+// Validasi bahwa tiket benar-benar ada di database
+$validateQuery = "SELECT t.id_tiket FROM tiket t 
+                  INNER JOIN maskapai m ON t.id_maskapai = m.id_maskapai 
+                  WHERE t.id_tiket = ? AND t.asal_kota = ? AND t.tujuan_kota = ? AND m.nama_maskapai = ?";
+$validateStmt = mysqli_prepare($conn, $validateQuery);
+mysqli_stmt_bind_param($validateStmt, "isss", $id_tiket, $from, $to, $airline);
+mysqli_stmt_execute($validateStmt);
+$validateResult = mysqli_stmt_get_result($validateStmt);
+
+if (mysqli_num_rows($validateResult) == 0) {
+    mysqli_stmt_close($validateStmt);
+    safeRedirect("search.php");
+}
+mysqli_stmt_close($validateStmt);
 ?>
 
 <!DOCTYPE html>
@@ -47,23 +63,23 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
         <div class="summary-title">✈️ Penerbangan Dipilih</div>
         <div class="flight-route">
           <div class="route-city">
-            <div class="route-city-name"><?php echo htmlspecialchars($from); ?></div>
+            <div class="route-city-name"><?php echo htmlspecialchars($from, ENT_QUOTES, 'UTF-8'); ?></div>
           </div>
           <div class="route-arrow">→</div>
           <div class="route-city">
-            <div class="route-city-name"><?php echo htmlspecialchars($to); ?></div>
+            <div class="route-city-name"><?php echo htmlspecialchars($to, ENT_QUOTES, 'UTF-8'); ?></div>
           </div>
         </div>
         <div class="airline-info">
-          🛫 <?php echo htmlspecialchars($airline); ?>
+          🛫 <?php echo htmlspecialchars($airline, ENT_QUOTES, 'UTF-8'); ?>
         </div>
       </div>
 
       <form method="get" action="seat.php" id="bookingForm">
         <input type="hidden" name="id_tiket" value="<?php echo $id_tiket; ?>">
-        <input type="hidden" name="from" value="<?php echo htmlspecialchars($from); ?>">
-        <input type="hidden" name="to" value="<?php echo htmlspecialchars($to); ?>">
-        <input type="hidden" name="airline" value="<?php echo htmlspecialchars($airline); ?>">
+        <input type="hidden" name="from" value="<?php echo htmlspecialchars($from, ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="to" value="<?php echo htmlspecialchars($to, ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="airline" value="<?php echo htmlspecialchars($airline, ENT_QUOTES, 'UTF-8'); ?>">
         <input type="hidden" name="price" value="<?php echo $price; ?>">
 
         <div class="form-group">
@@ -100,7 +116,7 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
   <?php renderFooter(); ?>
 
   <script>
-    const pricePerSeat = <?php echo $price; ?>;
+    const pricePerSeat = <?php echo intval($price); ?>;
     const penumpangSelect = document.getElementById('penumpang');
     const totalPriceDisplay = document.getElementById('totalPrice');
 
@@ -111,8 +127,31 @@ if ($id_tiket == 0 || empty($from) || empty($to)) {
       totalPriceDisplay.textContent = 'Rp ' + totalPrice.toLocaleString('id-ID');
     });
 
-    // Set tgl minim hari ini
+    // Set tanggal minimum hari ini
     document.getElementById('date').min = new Date().toISOString().split('T')[0];
+    
+    // Validasi form sebelum submit
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      const date = document.getElementById('date').value;
+      const penumpang = document.getElementById('penumpang').value;
+      
+      if (!date || !penumpang) {
+        e.preventDefault();
+        alert('Silakan lengkapi semua data!');
+        return false;
+      }
+      
+      // Validasi tanggal tidak boleh di masa lalu
+      const selectedDate = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        e.preventDefault();
+        alert('Tanggal keberangkatan tidak boleh di masa lalu!');
+        return false;
+      }
+    });
   </script>
 </body>
 </html>

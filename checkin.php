@@ -2,30 +2,53 @@
 session_start();
 include 'connector.php';
 include 'headerFooter.php';
+include 'csrf_helper.php';
+
+// Cek login
+requireLogin();
+initSecureSession();
 
 $username = $_SESSION['username'];
-
-if (!isset($_SESSION['username']) || !isset($_SESSION['id_user'])) {
-    header("Location: index.php");
-    exit();
-}
-
 $id_user = $_SESSION['id_user'];
 $success = false;
 
+// Handle Check-in dengan CSRF protection
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pemesanan'])) {
-    $id_pemesanan = intval($_POST['id_pemesanan']);
-    $updateQuery = "UPDATE pemesanan SET checkin = 1 WHERE id_pemesanan = ? AND id_user = ?";
-    $stmt = mysqli_prepare($conn, $updateQuery);
-    mysqli_stmt_bind_param($stmt, "ii", $id_pemesanan, $id_user);
-    
-    if (mysqli_stmt_execute($stmt)) {
-        $success = true;
+    // CSRF Protection
+    if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+        die("Invalid security token. Refresh halaman dan coba lagi.");
     }
     
-    mysqli_stmt_close($stmt);
+    $id_pemesanan = intval($_POST['id_pemesanan']);
+    
+    // Validasi bahwa pemesanan milik user ini
+    $validateQuery = "SELECT id_pemesanan FROM pemesanan WHERE id_pemesanan = ? AND id_user = ? AND checkin = 0";
+    $validateStmt = mysqli_prepare($conn, $validateQuery);
+    mysqli_stmt_bind_param($validateStmt, "ii", $id_pemesanan, $id_user);
+    mysqli_stmt_execute($validateStmt);
+    $validateResult = mysqli_stmt_get_result($validateStmt);
+    
+    if (mysqli_num_rows($validateResult) > 0) {
+        mysqli_stmt_close($validateStmt);
+        
+        // Update check-in
+        $updateQuery = "UPDATE pemesanan SET checkin = 1 WHERE id_pemesanan = ? AND id_user = ?";
+        $stmt = mysqli_prepare($conn, $updateQuery);
+        mysqli_stmt_bind_param($stmt, "ii", $id_pemesanan, $id_user);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $success = true;
+            // Regenerate CSRF token setelah action
+            regenerateCsrfToken();
+        }
+        
+        mysqli_stmt_close($stmt);
+    } else {
+        mysqli_stmt_close($validateStmt);
+    }
 }
 
+// Query pemesanan yang belum check-in
 $query = "SELECT p.*, t.asal_kota, t.tujuan_kota, m.nama_maskapai 
           FROM pemesanan p
           INNER JOIN tiket t ON p.id_tiket = t.id_tiket
@@ -96,17 +119,17 @@ mysqli_stmt_close($stmt);
         ?>
           <div class="checkin-card">
             <div class="card-header">
-              <div class="booking-code-display"><?php echo htmlspecialchars($booking['kode_pemesanan']); ?></div>
+              <div class="booking-code-display"><?php echo htmlspecialchars($booking['kode_pemesanan'], ENT_QUOTES, 'UTF-8'); ?></div>
             </div>
 
             <div class="route-display">
               <div class="city-display">
-                <div class="city-name"><?php echo htmlspecialchars($booking['asal_kota']); ?></div>
+                <div class="city-name"><?php echo htmlspecialchars($booking['asal_kota'], ENT_QUOTES, 'UTF-8'); ?></div>
                 <div class="city-label">🛫 Keberangkatan</div>
               </div>
               <div class="plane-icon">✈️</div>
               <div class="city-display">
-                <div class="city-name"><?php echo htmlspecialchars($booking['tujuan_kota']); ?></div>
+                <div class="city-name"><?php echo htmlspecialchars($booking['tujuan_kota'], ENT_QUOTES, 'UTF-8'); ?></div>
                 <div class="city-label">🛬 Tujuan</div>
               </div>
             </div>
@@ -114,7 +137,7 @@ mysqli_stmt_close($stmt);
             <div class="flight-details">
               <div class="detail-item">
                 <span class="detail-label">✈️ Maskapai</span>
-                <span class="detail-value"><?php echo htmlspecialchars($booking['nama_maskapai']); ?></span>
+                <span class="detail-value"><?php echo htmlspecialchars($booking['nama_maskapai'], ENT_QUOTES, 'UTF-8'); ?></span>
               </div>
 
               <div class="detail-item">
@@ -131,7 +154,7 @@ mysqli_stmt_close($stmt);
                 <span class="detail-label">🪑 Kursi</span>
                 <div class="seats-display-mini">
                   <?php foreach ($seats as $seat): ?>
-                    <span class="seat-badge-mini"><?php echo htmlspecialchars(trim($seat)); ?></span>
+                    <span class="seat-badge-mini"><?php echo htmlspecialchars(trim($seat), ENT_QUOTES, 'UTF-8'); ?></span>
                   <?php endforeach; ?>
                 </div>
               </div>
@@ -143,6 +166,7 @@ mysqli_stmt_close($stmt);
             </div>
 
             <form method="POST" class="checkin-form">
+              <?php echo csrfTokenInput(); ?>
               <input type="hidden" name="id_pemesanan" value="<?php echo $booking['id_pemesanan']; ?>">
               <button type="submit" class="checkin-btn">✅ Check-in Sekarang</button>
             </form>
