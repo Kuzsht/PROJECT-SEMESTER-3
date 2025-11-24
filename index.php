@@ -113,8 +113,8 @@ $csrfToken = generateCsrfToken();
         }
         
         .warning-notification {
-            background: linear-gradient(135deg, #ff7675, #fd79a8);
-            box-shadow: 0 5px 20px rgba(255, 118, 117, 0.3);
+            background: linear-gradient(135deg, #d63031, #e17055);
+            box-shadow: 0 5px 20px rgba(214, 48, 49, 0.3);
         }
         
         .error-notification {

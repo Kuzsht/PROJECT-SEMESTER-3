@@ -1,8 +1,8 @@
 <?php
 // Konfigurasi database
 $servername = "localhost";
-$username_db = "root";
-$password_db = "";
+$username_db = "airtix";
+$password_db = "kelompok1";
 $database = "airtix.id";
 
 // Koneksi dengan error handling yang lebih baik

@@ -141,12 +141,6 @@ mysqli_stmt_close($stmtRecent);
           <h4>Kelola Pemesanan</h4>
           <p>Lihat semua pemesanan</p>
         </a>
-        
-        <a href="landingPage.php" class="admin-menu-item">
-          <span class="icon">🏠</span>
-          <h4>User Dashboard</h4>
-          <p>Lihat tampilan user</p>
-        </a>
       </div>
 
       <div class="recent-bookings">
