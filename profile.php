@@ -2,6 +2,7 @@
 session_start();
 include 'connector.php';
 include 'headerFooter.php';
+include 'csrfHelper.php';
 
 if (!isset($_SESSION['email_user'])) {
     header("Location: index.php");

@@ -89,7 +89,9 @@ function safeRedirect($url) {
     $allowedUrls = [
         'index.php', 'landingPage.php', 'search.php', 'profile.php',
         'history.php', 'checkIn.php', 'inputSearch.php', 'seat.php',
-        'bookingPayment.php', 'paymentSuccess.php', 'signUp.php', 'logOut.php'
+        'bookingPayment.php', 'paymentSuccess.php', 'signUp.php', 'logOut.php',
+        'adminDashboard.php', 'adminUsers.php', 'adminAirlines.php', 
+        'adminTickets.php', 'adminBookings.php'
     ];
     
     $basename = basename(parse_url($url, PHP_URL_PATH));

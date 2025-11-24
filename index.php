@@ -1,15 +1,21 @@
 <?php
 session_start();
 include 'connector.php';
-include 'csrf_helper.php';
+include 'csrfHelper.php';
+require_once 'roleHelper.php';
 
-// Redirect jika sudah login
+// Redirect jika sudah login berdasarkan role
 if (isset($_SESSION['username'])) {
-    safeRedirect("landingPage.php");
+    if (isAdmin()) {
+        safeRedirect("adminDashboard.php");
+    } else {
+        safeRedirect("landingPage.php");
+    }
 }
 
 $message = "";
 $showTimeout = isset($_GET['timeout']) && $_GET['timeout'] == '1';
+$showAccessDenied = isset($_GET['error']) && $_GET['error'] == 'access_denied';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // CSRF Protection
@@ -17,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = "Invalid security token. Refresh halaman dan coba lagi.";
     } else {
         $email_user = sanitizeInput($_POST['email']);
-        $password = $_POST['password']; // Jangan trim password
+        $password = $_POST['password'];
         
         // Validasi input
         if (empty($email_user) || empty($password)) {
@@ -25,8 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } elseif (!validateEmail($email_user)) {
             $message = "Format email tidak valid";
         } else {
-            // Rate limiting bisa ditambahkan di sini
-            
+            // Query dengan role
             $query = "SELECT * FROM user WHERE email_user = ?";
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, "s", $email_user);
@@ -37,15 +42,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $row = mysqli_fetch_assoc($result);
                 
                 if (password_verify($password, $row['password'])) {
-                    // Regenerate session ID untuk mencegah session fixation
+                    // Regenerate session ID
                     session_regenerate_id(true);
                     
-                    // Set session variables
+                    // Set session variables TERMASUK ROLE
                     $_SESSION['id_user'] = $row['id_user'];
                     $_SESSION['username'] = $row['username'];
                     $_SESSION['name'] = $row['name'];
                     $_SESSION['email_user'] = $row['email_user'];
                     $_SESSION['photo'] = $row['photo'];
+                    $_SESSION['role'] = $row['role']; // PENTING: Simpan role
                     $_SESSION['initialized'] = true;
                     $_SESSION['last_activity'] = time();
                     
@@ -53,7 +59,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     regenerateCsrfToken();
 
                     mysqli_stmt_close($stmt);
-                    safeRedirect("landingPage.php");
+                    
+                    // Redirect berdasarkan role
+                    if ($row['role'] === 'admin') {
+                        safeRedirect("adminDashboard.php");
+                    } else {
+                        safeRedirect("landingPage.php");
+                    }
                 } else {
                     $message = "Email atau password tidak valid";
                 }
@@ -66,7 +78,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Generate CSRF token untuk form
 $csrfToken = generateCsrfToken();
 ?>
 
@@ -80,6 +91,54 @@ $csrfToken = generateCsrfToken();
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/index.css">
+    <style>
+        .success-notification, .warning-notification, .error-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            z-index: 9999;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .success-notification {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            box-shadow: 0 5px 20px rgba(0, 184, 148, 0.3);
+        }
+        
+        .warning-notification {
+            background: linear-gradient(135deg, #ff7675, #fd79a8);
+            box-shadow: 0 5px 20px rgba(255, 118, 117, 0.3);
+        }
+        
+        .error-notification {
+            background: linear-gradient(135deg, #d63031, #e17055);
+            box-shadow: 0 5px 20px rgba(214, 48, 49, 0.3);
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            to { transform: translateX(400px); opacity: 0; }
+        }
+        
+        .success-notification.hide, .warning-notification.hide, .error-notification.hide {
+            animation: slideOut 0.5s ease forwards;
+        }
+        
+        .notification .icon {
+            font-size: 24px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -126,7 +185,6 @@ $csrfToken = generateCsrfToken();
     </div>
     
     <script>
-        // Cek notifikasi
         const urlParams = new URLSearchParams(window.location.search);
         
         if (urlParams.get('registered') === 'success') {
@@ -135,6 +193,10 @@ $csrfToken = generateCsrfToken();
         
         if (urlParams.get('timeout') === '1') {
             showNotification('⏱️', 'Sesi Anda telah berakhir. Silakan login kembali.', 'warning');
+        }
+        
+        if (urlParams.get('error') === 'access_denied') {
+            showNotification('🚫', 'Akses ditolak! Anda tidak memiliki izin untuk mengakses halaman tersebut.', 'error');
         }
         
         function showNotification(icon, text, type) {
@@ -151,7 +213,6 @@ $csrfToken = generateCsrfToken();
                 setTimeout(() => notification.remove(), 500);
             }, 5000);
             
-            // Bersihkan URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     </script>
